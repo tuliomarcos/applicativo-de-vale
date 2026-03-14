@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/aplicativo_de_vale/nodejs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PRESTADOR
+  CLIENTE
+  EMPRESA
+}
+
+enum ValeType {
+  VIAGEM
+  DIARIA
+}
+
+enum TripType {
+  ENTULHO
+  TERRA
+}
+
+enum DocumentType {
+  CPF
+  CNPJ
+}
+
+model user {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa     empresa?
+  clients     client[]
+  prestadores prestador[]
+  vales       vale[]
+  files       file[]
+}
+
+model empresa {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  name           String
+  cnpj           String
+  address        String
+  phone          String
+  primaryColor   String
+  secondaryColor String
+  logoFileId     String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user     user  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logoFile file? @relation(fields: [logoFileId], references: [id])
+}
+
+model client {
+  id          String   @id @default(uuid())
+  createdById String
+  name        String
+  cnpj        String
+  address     String
+  phone       String
+  email       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy user   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  vales     vale[]
+
+  @@index([createdById])
+}
+
+model prestador {
+  id           String       @id @default(uuid())
+  createdById  String
+  name         String
+  document     String
+  documentType DocumentType
+  address      String
+  phone        String
+  email        String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  createdBy user @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([createdById])
+}
+
+model vale {
+  id             String    @id @default(uuid())
+  type           ValeType
+  createdById    String
+  clientId       String
+  workLocation   String
+  date           DateTime
+  signaturePath  String
+  truckPlate     String?
+  driverName     String?
+  tripType       TripType?
+  operatorName   String?
+  morningStart   String?
+  morningEnd     String?
+  afternoonStart String?
+  afternoonEnd   String?
+  totalHours     Float?
+  equipment      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  createdBy user   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  client    client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([clientId])
+  @@index([type])
+  @@index([date])
+}
+
+model file {
+  id                  String   @id @default(uuid())
+  userId              String
+  fileName            String
+  cloud_storage_path  String
+  isPublic            Boolean  @default(false)
+  contentType         String
+  createdAt           DateTime @default(now())
+
+  user    user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresa empresa?
+
+  @@index([userId])
+}
