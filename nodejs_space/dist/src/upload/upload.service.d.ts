@@ -8,7 +8,7 @@ export declare class UploadService {
         cloud_storage_path: string;
     }>;
     completeUpload(userId: string, cloud_storage_path: string, fileName: string, contentType: string, isPublic: boolean, empresaId?: string): Promise<{
-        id: string;
+        id: any;
         cloud_storage_path: string;
         url: string;
     }>;

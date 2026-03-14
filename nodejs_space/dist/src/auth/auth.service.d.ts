@@ -9,30 +9,24 @@ export declare class AuthService {
     signup(signupDto: SignupDto): Promise<{
         token: string;
         user: {
-            id: string;
-            email: string;
-            name: string;
-            phone: string;
-            role: import("@prisma/client").$Enums.UserRole;
+            id: any;
+            email: any;
+            name: any;
+            phone: any;
+            role: any;
         };
     }>;
     login(loginDto: LoginDto): Promise<{
         token: string;
         user: {
-            id: string;
-            email: string;
-            name: string;
-            phone: string;
-            role: import("@prisma/client").$Enums.UserRole;
+            id: any;
+            email: any;
+            name: any;
+            phone: any;
+            role: any;
         };
     }>;
     getMe(userId: string): Promise<{
-        user: {
-            id: string;
-            name: string;
-            email: string;
-            phone: string;
-            role: import("@prisma/client").$Enums.UserRole;
-        };
+        user: any;
     }>;
 }

@@ -58,8 +58,8 @@ async function bootstrap() {
     customfavIcon: 'data:image/svg+xml,<svg xmlns="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Emoji_u1f4dd.svg/1280px-Emoji_u1f4dd.svg.png" viewBox="0 0 100 100"><text y=".9em" font-size="90">📝</text></svg>',
   });
 
-  await app.listen(3000);
-  logger.log(`✅ Application is running on: http://localhost:3000`);
-  logger.log(`📚 API Documentation available at: http://localhost:3000/${swaggerPath}`);
+  await app.listen(2026);
+  logger.log(`✅ Application is running on: http://localhost:2026`);
+  logger.log(`📚 API Documentation available at: http://localhost:2026/${swaggerPath}`);
 }
 bootstrap();

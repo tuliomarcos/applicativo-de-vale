@@ -8,7 +8,7 @@ export declare class UploadController {
         cloud_storage_path: string;
     }>;
     completeUpload(user: any, dto: CompleteUploadDto): Promise<{
-        id: string;
+        id: any;
         cloud_storage_path: string;
         url: string;
     }>;

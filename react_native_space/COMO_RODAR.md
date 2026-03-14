@@ -7,8 +7,8 @@
 
 **Configuracao da API**
 1. Crie um arquivo `.env` neste diretorio.
-2. Adicione `EXPO_PUBLIC_API_URL=http://localhost:3000`
-3. Se for testar em celular, use o IP da sua maquina na rede, ex: `EXPO_PUBLIC_API_URL=http://192.168.0.10:3000`
+2. Adicione `EXPO_PUBLIC_API_URL=http://localhost:2026`
+3. Se for testar em celular, use o IP da sua maquina na rede, ex: `EXPO_PUBLIC_API_URL=http://192.168.0.10:2026`
 
 **Passo a passo**
 1. `corepack enable`

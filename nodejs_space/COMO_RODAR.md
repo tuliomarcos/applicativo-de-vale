@@ -11,8 +11,8 @@
 3. `yarn start:dev`
 
 **URLs uteis**
-- API base: `http://localhost:3000/api`
-- Swagger: `http://localhost:3000/api-docs`
+- API base: `http://localhost:2026/api`
+- Swagger: `http://localhost:2026/api-docs`
 
 **Variaveis de ambiente**
 - Este projeto ja possui um `.env` neste diretorio. Ajuste valores se precisar apontar para outro banco ou bucket.

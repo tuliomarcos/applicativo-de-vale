@@ -47,28 +47,8 @@ export declare class ValesService {
         equipment: any;
     }>;
     findAll(type?: string, search?: string, page?: number, limit?: number): Promise<{
-        items: {
-            id: any;
-            type: any;
-            clientId: any;
-            client: any;
-            workLocation: any;
-            date: any;
-            signatureUrl: string;
-            createdById: any;
-            createdAt: any;
-            truckPlate: any;
-            driverName: any;
-            tripType: any;
-            operatorName: any;
-            morningStart: any;
-            morningEnd: any;
-            afternoonStart: any;
-            afternoonEnd: any;
-            totalHours: any;
-            equipment: any;
-        }[];
-        total: number;
+        items: any[];
+        total: any;
         page: number;
         totalPages: number;
     }>;
@@ -119,25 +99,5 @@ export declare class ValesService {
     }>;
     private uploadSignature;
     private formatValeResponse;
-    getValesByIds(valeIds: string[]): Promise<{
-        id: any;
-        type: any;
-        clientId: any;
-        client: any;
-        workLocation: any;
-        date: any;
-        signatureUrl: string;
-        createdById: any;
-        createdAt: any;
-        truckPlate: any;
-        driverName: any;
-        tripType: any;
-        operatorName: any;
-        morningStart: any;
-        morningEnd: any;
-        afternoonStart: any;
-        afternoonEnd: any;
-        totalHours: any;
-        equipment: any;
-    }[]>;
+    getValesByIds(valeIds: string[]): Promise<any[]>;
 }

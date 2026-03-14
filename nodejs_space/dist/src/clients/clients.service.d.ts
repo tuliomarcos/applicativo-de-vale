@@ -4,55 +4,15 @@ export declare class ClientsService {
     private prisma;
     private readonly logger;
     constructor(prisma: PrismaService);
-    create(userId: string, createClientDto: CreateClientDto): Promise<{
-        id: string;
-        name: string;
-        email: string;
-        phone: string;
-        createdAt: Date;
-        updatedAt: Date;
-        cnpj: string;
-        address: string;
-        createdById: string;
-    }>;
+    create(userId: string, createClientDto: CreateClientDto): Promise<any>;
     findAll(search?: string, page?: number, limit?: number): Promise<{
-        items: {
-            id: string;
-            name: string;
-            email: string;
-            phone: string;
-            createdAt: Date;
-            updatedAt: Date;
-            cnpj: string;
-            address: string;
-            createdById: string;
-        }[];
-        total: number;
+        items: any;
+        total: any;
         page: number;
         totalPages: number;
     }>;
-    findOne(id: string): Promise<{
-        id: string;
-        name: string;
-        email: string;
-        phone: string;
-        createdAt: Date;
-        updatedAt: Date;
-        cnpj: string;
-        address: string;
-        createdById: string;
-    }>;
-    update(id: string, updateClientDto: UpdateClientDto): Promise<{
-        id: string;
-        name: string;
-        email: string;
-        phone: string;
-        createdAt: Date;
-        updatedAt: Date;
-        cnpj: string;
-        address: string;
-        createdById: string;
-    }>;
+    findOne(id: string): Promise<any>;
+    update(id: string, updateClientDto: UpdateClientDto): Promise<any>;
     delete(id: string): Promise<{
         success: boolean;
     }>;
