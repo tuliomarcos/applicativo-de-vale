@@ -6,23 +6,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
-import { DashboardStats } from '../../types';
+import { DashboardStats, UserRole } from '../../types';
 import { theme, spacing, typography, borderRadius } from '../constants/theme';
 
 interface ActionCard {
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
   route: string;
-  roles: string[];
+  roles: UserRole[];
 }
 
 const actionCards: ActionCard[] = [
-  { title: 'Criar Vale Viagem', icon: 'car-outline', route: '/vales/criar-viagem', roles: ['EMPRESA_TERRAPLANAGEM', 'PRESTADOR_SERVICO'] },
-  { title: 'Criar Vale Diária', icon: 'time-outline', route: '/vales/criar-diaria', roles: ['EMPRESA_TERRAPLANAGEM', 'PRESTADOR_SERVICO'] },
-  { title: 'Lista de Vales', icon: 'document-text-outline', route: '/(tabs)/vales', roles: ['EMPRESA_TERRAPLANAGEM', 'PRESTADOR_SERVICO', 'CLIENTE'] },
-  { title: 'Clientes', icon: 'people-outline', route: '/(tabs)/clientes', roles: ['EMPRESA_TERRAPLANAGEM', 'PRESTADOR_SERVICO'] },
-  { title: 'Prestadores', icon: 'briefcase-outline', route: '/prestadores', roles: ['EMPRESA_TERRAPLANAGEM'] },
-  { title: 'Minha Empresa', icon: 'business-outline', route: '/empresa/cadastrar', roles: ['EMPRESA_TERRAPLANAGEM'] },
+  { title: 'Criar Vale Viagem', icon: 'car-outline', route: '/vales/criar-viagem', roles: ['EMPRESA', 'PRESTADOR'] },
+  { title: 'Criar Vale Diária', icon: 'time-outline', route: '/vales/criar-diaria', roles: ['EMPRESA', 'PRESTADOR'] },
+  { title: 'Lista de Vales', icon: 'document-text-outline', route: '/(tabs)/vales', roles: ['EMPRESA', 'PRESTADOR', 'CLIENTE'] },
+  { title: 'Clientes', icon: 'people-outline', route: '/(tabs)/clientes', roles: ['EMPRESA', 'PRESTADOR'] },
+  { title: 'Prestadores', icon: 'briefcase-outline', route: '/prestadores', roles: ['EMPRESA'] },
+  { title: 'Minha Empresa', icon: 'business-outline', route: '/empresa/cadastrar', roles: ['EMPRESA'] },
 ];
 
 export default function DashboardScreen() {
@@ -49,15 +49,15 @@ export default function DashboardScreen() {
     }
   };
 
-  const filteredCards = actionCards.filter((card) =>
-    card.roles.includes(user?.role ?? '')
-  );
+  const filteredCards = user?.role
+    ? actionCards.filter((card) => card.roles.includes(user.role))
+    : [];
 
-  const getRoleName = (role: string) => {
+  const getRoleName = (role: UserRole | '') => {
     switch (role) {
-      case 'EMPRESA_TERRAPLANAGEM':
+      case 'EMPRESA':
         return 'Empresa';
-      case 'PRESTADOR_SERVICO':
+      case 'PRESTADOR':
         return 'Prestador';
       case 'CLIENTE':
         return 'Cliente';
@@ -103,7 +103,7 @@ export default function DashboardScreen() {
                     <TouchableOpacity
                       key={card.title}
                       style={styles.actionCard}
-                      onPress={() => router.push(card.route as any)}
+                      onPress={() => router.push(card.route)}
                       activeOpacity={0.8}
                     >
                       <Ionicons name={card.icon} size={32} color={theme.colors.primary} />

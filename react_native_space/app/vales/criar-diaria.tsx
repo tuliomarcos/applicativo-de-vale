@@ -84,7 +84,7 @@ export default function CriarDiariaScreen() {
       });
       showToast.success(successMessages.createVoucher);
       router.back();
-    } catch (error: any) {
+    } catch (error: unknown) {
       showToast.error(getErrorMessage(error));
     } finally {
       setLoading(false);

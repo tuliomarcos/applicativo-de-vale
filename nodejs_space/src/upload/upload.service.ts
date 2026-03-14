@@ -1,6 +1,13 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import * as s3 from '../lib/s3';
+import {
+  CompleteUploadResponse,
+  FileUrlResponse,
+  MultipartInitResponse,
+  PresignedUploadResponse,
+  SuccessResponse,
+} from '../types/api';
 
 @Injectable()
 export class UploadService {
@@ -12,7 +19,7 @@ export class UploadService {
     fileName: string,
     contentType: string,
     isPublic: boolean,
-  ) {
+  ): Promise<PresignedUploadResponse> {
     try {
       const result = await s3.generatePresignedUploadUrl(
         fileName,
@@ -34,7 +41,7 @@ export class UploadService {
     contentType: string,
     isPublic: boolean,
     empresaId?: string,
-  ) {
+  ): Promise<CompleteUploadResponse> {
     try {
       const file = await this.prisma.file.create({
         data: {
@@ -68,7 +75,7 @@ export class UploadService {
     fileName: string,
     contentType: string,
     isPublic: boolean,
-  ) {
+  ): Promise<MultipartInitResponse> {
     try {
       const result = await s3.initiateMultipartUpload(
         fileName,
@@ -89,7 +96,7 @@ export class UploadService {
     cloud_storage_path: string,
     uploadId: string,
     partNumber: number,
-  ) {
+  ): Promise<string> {
     try {
       return await s3.getPresignedUrlForPart(
         cloud_storage_path,
@@ -108,7 +115,7 @@ export class UploadService {
     cloud_storage_path: string,
     uploadId: string,
     parts: Array<{ ETag: string; PartNumber: number }>,
-  ) {
+  ): Promise<void> {
     try {
       await s3.completeMultipartUpload(cloud_storage_path, uploadId, parts);
       this.logger.log(`Completed multipart upload for ${cloud_storage_path}`);
@@ -120,7 +127,10 @@ export class UploadService {
     }
   }
 
-  async getFileUrl(fileId: string, mode: string) {
+  async getFileUrl(
+    fileId: string,
+    mode: 'view' | 'download',
+  ): Promise<FileUrlResponse> {
     try {
       const file = await this.prisma.file.findUnique({
         where: { id: fileId },
@@ -139,7 +149,7 @@ export class UploadService {
     }
   }
 
-  async deleteFile(fileId: string) {
+  async deleteFile(fileId: string): Promise<SuccessResponse> {
     try {
       const file = await this.prisma.file.findUnique({
         where: { id: fileId },

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { DashboardStatsResponse } from '../types/api';
 
 @ApiTags('Dashboard')
 @Controller('api/dashboard')
@@ -18,7 +19,7 @@ export class DashboardController {
   @Get('stats')
   @ApiOperation({ summary: 'Get dashboard statistics' })
   @ApiResponse({ status: 200, description: 'Dashboard stats retrieved' })
-  async getStats() {
+  async getStats(): Promise<DashboardStatsResponse> {
     return this.dashboardService.getStats();
   }
 }

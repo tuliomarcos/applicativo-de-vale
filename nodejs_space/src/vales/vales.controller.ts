@@ -31,6 +31,15 @@ import {
 } from './dto/vale-actions.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import {
+  AuthUser,
+  PaginatedResponse,
+  PdfResponse,
+  SendEmailResponse,
+  ShareLinkResponse,
+  SuccessResponse,
+  ValeResponse,
+} from '../types/api';
 
 @ApiTags('Vales (Vouchers)')
 @Controller('api/vales')
@@ -47,9 +56,9 @@ export class ValesController {
   @ApiOperation({ summary: 'Create Vale Viagem' })
   @ApiResponse({ status: 201, description: 'Vale Viagem created' })
   async createValeViagem(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() createDto: CreateValeViagemDto,
-  ) {
+  ): Promise<ValeResponse> {
     return this.valesService.createValeViagem(user.userId, createDto);
   }
 
@@ -57,9 +66,9 @@ export class ValesController {
   @ApiOperation({ summary: 'Create Vale Diária' })
   @ApiResponse({ status: 201, description: 'Vale Diária created' })
   async createValeDiaria(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() createDto: CreateValeDiariaDto,
-  ) {
+  ): Promise<ValeResponse> {
     return this.valesService.createValeDiaria(user.userId, createDto);
   }
 
@@ -75,7 +84,7 @@ export class ValesController {
     @Query('search') search?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-  ) {
+  ): Promise<PaginatedResponse<ValeResponse>> {
     return this.valesService.findAll(
       type,
       search,
@@ -88,7 +97,7 @@ export class ValesController {
   @ApiOperation({ summary: 'Get vale by ID' })
   @ApiResponse({ status: 200, description: 'Vale retrieved' })
   @ApiResponse({ status: 404, description: 'Vale not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<ValeResponse> {
     return this.valesService.findOne(id);
   }
 
@@ -98,9 +107,9 @@ export class ValesController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async update(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() updateDto: UpdateValeDto,
-  ) {
+  ): Promise<ValeResponse> {
     return this.valesService.update(id, user.userId, user.role, updateDto);
   }
 
@@ -108,7 +117,10 @@ export class ValesController {
   @ApiOperation({ summary: 'Delete vale (EMPRESA only)' })
   @ApiResponse({ status: 200, description: 'Vale deleted' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async delete(@Param('id') id: string, @CurrentUser() user: any) {
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<SuccessResponse> {
     return this.valesService.delete(id, user.role);
   }
 
@@ -116,9 +128,9 @@ export class ValesController {
   @ApiOperation({ summary: 'Generate PDF for vales' })
   @ApiResponse({ status: 200, description: 'PDF generated' })
   async generatePdf(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() dto: GeneratePdfDto,
-  ) {
+  ): Promise<PdfResponse> {
     return this.pdfService.generatePdf(user.userId, dto.valeIds);
   }
 
@@ -126,9 +138,9 @@ export class ValesController {
   @ApiOperation({ summary: 'Send vales via email' })
   @ApiResponse({ status: 200, description: 'Email sent' })
   async sendEmail(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() dto: SendEmailDto,
-  ) {
+  ): Promise<SendEmailResponse> {
     return this.emailService.sendValesEmail(
       user.userId,
       dto.valeIds,
@@ -140,9 +152,9 @@ export class ValesController {
   @ApiOperation({ summary: 'Generate WhatsApp share link' })
   @ApiResponse({ status: 200, description: 'Share link generated' })
   async generateShareLink(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() dto: ShareLinkDto,
-  ) {
+  ): Promise<ShareLinkResponse> {
     const pdfResult = await this.pdfService.generatePdf(
       user.userId,
       dto.valeIds,

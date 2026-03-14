@@ -9,8 +9,9 @@ import { GradientButton } from '../../components/GradientButton';
 import { useAuth } from '../../contexts/AuthContext';
 import { theme, spacing, typography, borderRadius } from '../constants/theme';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { UserRole } from '../../types';
 
-type ProfileType = 'PRESTADOR_SERVICO' | 'CLIENTE' | 'EMPRESA_TERRAPLANAGEM';
+type ProfileType = UserRole;
 
 interface ProfileOption {
   value: ProfileType;
@@ -19,9 +20,9 @@ interface ProfileOption {
 }
 
 const profileOptions: ProfileOption[] = [
-  { value: 'PRESTADOR_SERVICO', label: 'Prestador de Serviço', icon: 'build-outline' },
+  { value: 'PRESTADOR', label: 'Prestador de Serviço', icon: 'build-outline' },
   { value: 'CLIENTE', label: 'Cliente', icon: 'person-outline' },
-  { value: 'EMPRESA_TERRAPLANAGEM', label: 'Empresa de Terraplanagem', icon: 'business-outline' },
+  { value: 'EMPRESA', label: 'Empresa de Terraplanagem', icon: 'business-outline' },
 ];
 
 export default function SignupScreen() {
@@ -76,7 +77,7 @@ export default function SignupScreen() {
       });
       showToast.success(successMessages.signup);
       // Navigation handled by AuthContext
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       showToast.error(errorMessage);
     } finally {

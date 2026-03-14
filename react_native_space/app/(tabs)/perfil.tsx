@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { theme, spacing, typography, borderRadius } from '../constants/theme';
+import { UserRole } from '../../types';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -29,11 +30,11 @@ export default function PerfilScreen() {
     );
   };
 
-  const getRoleName = (role: string) => {
+  const getRoleName = (role: UserRole | '') => {
     switch (role) {
-      case 'EMPRESA_TERRAPLANAGEM':
+      case 'EMPRESA':
         return 'Empresa de Terraplanagem';
-      case 'PRESTADOR_SERVICO':
+      case 'PRESTADOR':
         return 'Prestador de Serviço';
       case 'CLIENTE':
         return 'Cliente';
@@ -88,7 +89,7 @@ export default function PerfilScreen() {
             </View>
           </View>
 
-          {user?.role === 'EMPRESA_TERRAPLANAGEM' && (
+          {user?.role === 'EMPRESA' && (
             <TouchableOpacity
               style={styles.button}
               onPress={() => router.push('/empresa/cadastrar')}

@@ -1,4 +1,5 @@
 import Toast from 'react-native-toast-message';
+import { AxiosError } from 'axios';
 
 export const showToast = {
   success: (message: string) => {
@@ -109,15 +110,21 @@ export const successMessages = {
   shareWhatsapp: 'Compartilhado via WhatsApp!',
 };
 
-export const getErrorMessage = (error: any): string => {
+type ApiErrorResponse = {
+  message?: string | string[];
+  error?: string;
+};
+
+export const getErrorMessage = (error: unknown): string => {
   // Se for uma string simples
   if (typeof error === 'string') {
     return errorMessages[error] || error;
   }
   
   // Se for um objeto de erro com response do axios
-  if (error?.response?.data) {
-    const data = error.response.data;
+  if (error && typeof error === 'object' && (error as AxiosError).response?.data) {
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+    const data = axiosError.response?.data;
     
     // Verificar se tem mensagem específica
     if (data.message) {
@@ -134,8 +141,9 @@ export const getErrorMessage = (error: any): string => {
   }
   
   // Se for erro de rede
-  if (error?.message) {
-    return errorMessages[error.message] || error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = String((error as { message?: unknown }).message);
+    return errorMessages[message] || message;
   }
   
   // Mensagem padrão

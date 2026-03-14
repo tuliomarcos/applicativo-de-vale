@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { User } from '../types';
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
@@ -45,7 +46,7 @@ export const storage = {
     }
   },
 
-  async setUser(user: any): Promise<void> {
+  async setUser(user: User): Promise<void> {
     try {
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
     } catch (error) {
@@ -53,10 +54,10 @@ export const storage = {
     }
   },
 
-  async getUser(): Promise<any | null> {
+  async getUser(): Promise<User | null> {
     try {
       const userData = await AsyncStorage.getItem(USER_KEY);
-      return userData ? JSON.parse(userData) : null;
+      return userData ? (JSON.parse(userData) as User) : null;
     } catch (error) {
       console.error('Error getting user:', error);
       return null;

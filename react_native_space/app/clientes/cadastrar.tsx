@@ -49,7 +49,7 @@ export default function CadastrarClienteScreen() {
       });
       showToast.success(successMessages.createClient);
       router.back();
-    } catch (error: any) {
+    } catch (error: unknown) {
       showToast.error(getErrorMessage(error));
     } finally {
       setLoading(false);

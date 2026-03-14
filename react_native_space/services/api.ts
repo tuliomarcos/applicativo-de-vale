@@ -1,6 +1,22 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { storage } from './storage';
-import { AuthResponse, User, Client, Prestador, Empresa, Vale, PaginatedResponse, DashboardStats } from '../types';
+import {
+  AuthResponse,
+  User,
+  Client,
+  Prestador,
+  Empresa,
+  Vale,
+  PaginatedResponse,
+  DashboardStats,
+  SignupPayload,
+  CreateClientPayload,
+  CreatePrestadorPayload,
+  CreateEmpresaPayload,
+  CreateValeViagemPayload,
+  CreateValeDiariaPayload,
+  UpdateValePayload,
+} from '../types';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://a9ee74b78.na106.preview.abacusai.app';
 
@@ -43,13 +59,7 @@ class ApiService {
   }
 
   // Auth
-  async signup(data: {
-    name: string;
-    phone: string;
-    email: string;
-    password: string;
-    role: string;
-  }): Promise<AuthResponse> {
+  async signup(data: SignupPayload): Promise<AuthResponse> {
     const response = await this.client.post<AuthResponse>('/signup', data);
     return response.data;
   }
@@ -65,7 +75,7 @@ class ApiService {
   }
 
   // Clients
-  async createClient(data: Omit<Client, 'id' | 'createdAt'>): Promise<Client> {
+  async createClient(data: CreateClientPayload): Promise<Client> {
     const response = await this.client.post<Client>('/clients', data);
     return response.data;
   }
@@ -90,7 +100,7 @@ class ApiService {
   }
 
   // Prestadores
-  async createPrestador(data: Omit<Prestador, 'id' | 'createdAt'>): Promise<Prestador> {
+  async createPrestador(data: CreatePrestadorPayload): Promise<Prestador> {
     const response = await this.client.post<Prestador>('/prestadores', data);
     return response.data;
   }
@@ -115,7 +125,7 @@ class ApiService {
   }
 
   // Empresa
-  async createEmpresa(data: Omit<Empresa, 'id' | 'userId' | 'logoUrl' | 'createdAt'>): Promise<Empresa> {
+  async createEmpresa(data: CreateEmpresaPayload): Promise<Empresa> {
     const response = await this.client.post<Empresa>('/empresa', data);
     return response.data;
   }
@@ -177,32 +187,12 @@ class ApiService {
   }
 
   // Vales
-  async createValeViagem(data: {
-    clientId: string;
-    truckPlate: string;
-    driverName: string;
-    tripType: 'ENTULHO' | 'TERRA';
-    workLocation: string;
-    date: string;
-    signatureData: string;
-  }): Promise<Vale> {
+  async createValeViagem(data: CreateValeViagemPayload): Promise<Vale> {
     const response = await this.client.post<Vale>('/vales/viagem', data);
     return response.data;
   }
 
-  async createValeDiaria(data: {
-    clientId: string;
-    operatorName: string;
-    workLocation: string;
-    date: string;
-    morningStart: string;
-    morningEnd: string;
-    afternoonStart: string;
-    afternoonEnd: string;
-    totalHours: number;
-    equipment: string;
-    signatureData: string;
-  }): Promise<Vale> {
+  async createValeDiaria(data: CreateValeDiariaPayload): Promise<Vale> {
     const response = await this.client.post<Vale>('/vales/diaria', data);
     return response.data;
   }
@@ -217,7 +207,7 @@ class ApiService {
     return response.data;
   }
 
-  async updateVale(id: string, data: any): Promise<Vale> {
+  async updateVale(id: string, data: UpdateValePayload): Promise<Vale> {
     const response = await this.client.patch<Vale>(`/vales/${id}`, data);
     return response.data;
   }

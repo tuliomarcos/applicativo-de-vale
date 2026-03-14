@@ -1,15 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { DashboardStatsResponse } from '../types/api';
+import { ValesService } from '../vales/vales.service';
 
 @Injectable()
 export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private valesService: ValesService,
+  ) {}
 
-  async getStats() {
+  async getStats(): Promise<DashboardStatsResponse> {
     try {
-      const [totalVales, totalClients, recentVales] = await Promise.all([
+      const [totalVales, totalClients, recentValesRaw] = await Promise.all([
         this.prisma.vale.count(),
         this.prisma.client.count(),
         this.prisma.vale.findMany({
@@ -27,6 +32,10 @@ export class DashboardService {
           },
         }),
       ]);
+
+      const recentVales = await Promise.all(
+        recentValesRaw.map((vale) => this.valesService.formatValeResponse(vale)),
+      );
 
       return {
         totalVales,

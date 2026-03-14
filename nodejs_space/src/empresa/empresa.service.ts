@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateEmpresaDto, UpdateEmpresaDto } from './dto/empresa.dto';
 import * as s3 from '../lib/s3';
+import { EmpresaResponse } from '../types/api';
 
 @Injectable()
 export class EmpresaService {
@@ -9,7 +10,10 @@ export class EmpresaService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, createEmpresaDto: CreateEmpresaDto) {
+  async create(
+    userId: string,
+    createEmpresaDto: CreateEmpresaDto,
+  ): Promise<EmpresaResponse> {
     try {
       const empresa = await this.prisma.empresa.create({
         data: {
@@ -26,7 +30,7 @@ export class EmpresaService {
     }
   }
 
-  async getByUserId(userId: string) {
+  async getByUserId(userId: string): Promise<EmpresaResponse | null> {
     try {
       const empresa = await this.prisma.empresa.findUnique({
         where: { userId },
@@ -43,7 +47,10 @@ export class EmpresaService {
     }
   }
 
-  async update(id: string, updateEmpresaDto: UpdateEmpresaDto) {
+  async update(
+    id: string,
+    updateEmpresaDto: UpdateEmpresaDto,
+  ): Promise<EmpresaResponse> {
     try {
       const empresa = await this.prisma.empresa.update({
         where: { id },
@@ -58,7 +65,9 @@ export class EmpresaService {
     }
   }
 
-  private async getEmpresaWithLogo(empresaId: string) {
+  private async getEmpresaWithLogo(
+    empresaId: string,
+  ): Promise<EmpresaResponse> {
     const empresa = await this.prisma.empresa.findUnique({
       where: { id: empresaId },
       include: { logoFile: true },

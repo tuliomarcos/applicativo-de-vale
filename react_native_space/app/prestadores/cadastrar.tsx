@@ -51,7 +51,7 @@ export default function CadastrarPrestadorScreen() {
       });
       showToast.success(successMessages.createServiceProvider);
       router.back();
-    } catch (error: any) {
+    } catch (error: unknown) {
       showToast.error(getErrorMessage(error));
     } finally {
       setLoading(false);

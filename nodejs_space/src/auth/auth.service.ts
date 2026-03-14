@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../database/prisma.service';
 import { SignupDto, LoginDto } from './dto/auth.dto';
+import { AuthResponse, MeResponse } from '../types/api';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +19,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(signupDto: SignupDto) {
+  async signup(signupDto: SignupDto): Promise<AuthResponse> {
     try {
       const existingUser = await this.prisma.user.findUnique({
         where: { email: signupDto.email },
@@ -64,7 +65,7 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<AuthResponse> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { email: loginDto.email },
@@ -107,7 +108,7 @@ export class AuthService {
     }
   }
 
-  async getMe(userId: string) {
+  async getMe(userId: string): Promise<MeResponse> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {

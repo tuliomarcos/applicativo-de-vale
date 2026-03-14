@@ -26,7 +26,7 @@ export default function PrestadoresScreen() {
   const loadPrestadores = async () => {
     try {
       setLoading(true);
-      const params: any = {};
+      const params: { search?: string } = {};
       if (search) params.search = search;
       const response = await api.getPrestadores(params);
       setPrestadores(response.items ?? []);

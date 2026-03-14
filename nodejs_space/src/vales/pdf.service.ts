@@ -5,6 +5,7 @@ import { EmpresaService } from '../empresa/empresa.service';
 import PDFDocument from 'pdfkit';
 import * as s3 from '../lib/s3';
 import fetch from 'node-fetch';
+import { EmpresaResponse, PdfResponse, ValeResponse } from '../types/api';
 
 @Injectable()
 export class PdfService {
@@ -16,7 +17,7 @@ export class PdfService {
     private empresaService: EmpresaService,
   ) {}
 
-  async generatePdf(userId: string, valeIds: string[]) {
+  async generatePdf(userId: string, valeIds: string[]): Promise<PdfResponse> {
     try {
       // Get user's empresa
       const empresa = await this.empresaService.getByUserId(userId);
@@ -75,8 +76,8 @@ export class PdfService {
   }
 
   private async createPdfBuffer(
-    empresa: any,
-    vales: any[],
+    empresa: EmpresaResponse,
+    vales: ValeResponse[],
   ): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {

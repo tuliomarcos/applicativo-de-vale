@@ -12,6 +12,41 @@ import {
   UpdateValeDto,
 } from './dto/vale.dto';
 import * as s3 from '../lib/s3';
+import { Prisma } from '@prisma/client';
+import {
+  PaginatedResponse,
+  ValeResponse,
+  SuccessResponse,
+  UserRoleValue,
+} from '../types/api';
+
+type ValeWithClientSummary = Prisma.ValeGetPayload<{
+  include: {
+    client: {
+      select: {
+        id: true;
+        name: true;
+        cnpj: true;
+        email: true;
+      };
+    };
+  };
+}>;
+
+type ValeWithClientDetail = Prisma.ValeGetPayload<{
+  include: {
+    client: {
+      select: {
+        id: true;
+        name: true;
+        cnpj: true;
+        email: true;
+        address: true;
+        phone: true;
+      };
+    };
+  };
+}>;
 
 @Injectable()
 export class ValesService {
@@ -22,7 +57,7 @@ export class ValesService {
   async createValeViagem(
     userId: string,
     createDto: CreateValeViagemDto,
-  ) {
+  ): Promise<ValeResponse> {
     try {
       // Upload signature to S3
       const signaturePath = await this.uploadSignature(
@@ -65,7 +100,7 @@ export class ValesService {
   async createValeDiaria(
     userId: string,
     createDto: CreateValeDiariaDto,
-  ) {
+  ): Promise<ValeResponse> {
     try {
       // Upload signature to S3
       const signaturePath = await this.uploadSignature(
@@ -114,11 +149,11 @@ export class ValesService {
     search?: string,
     page = 1,
     limit = 10,
-  ) {
+  ): Promise<PaginatedResponse<ValeResponse>> {
     try {
       const skip = (page - 1) * limit;
 
-      const where: any = {};
+      const where: Prisma.ValeWhereInput = {};
 
       if (type && (type === 'VIAGEM' || type === 'DIARIA')) {
         where.type = type;
@@ -169,7 +204,7 @@ export class ValesService {
     }
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ValeResponse> {
     try {
       const vale = await this.prisma.vale.findUnique({
         where: { id },
@@ -201,9 +236,9 @@ export class ValesService {
   async update(
     id: string,
     userId: string,
-    userRole: string,
+    userRole: UserRoleValue,
     updateDto: UpdateValeDto,
-  ) {
+  ): Promise<ValeResponse> {
     try {
       // Only EMPRESA role can update vales
       if (userRole !== 'EMPRESA') {
@@ -233,7 +268,10 @@ export class ValesService {
     }
   }
 
-  async delete(id: string, userRole: string) {
+  async delete(
+    id: string,
+    userRole: UserRoleValue,
+  ): Promise<SuccessResponse> {
     try {
       // Only EMPRESA role can delete vales
       if (userRole !== 'EMPRESA') {
@@ -298,7 +336,9 @@ export class ValesService {
     }
   }
 
-  private async formatValeResponse(vale: any) {
+  async formatValeResponse(
+    vale: ValeWithClientSummary | ValeWithClientDetail,
+  ): Promise<ValeResponse> {
     const signatureUrl = await s3.getFileUrl(vale.signaturePath, false);
 
     return {
@@ -326,11 +366,18 @@ export class ValesService {
     };
   }
 
-  async getValesByIds(valeIds: string[]) {
-    const vales = await this.prisma.vale.findMany({
+  async getValesByIds(valeIds: string[]): Promise<ValeResponse[]> {
+    const vales: ValeWithClientSummary[] = await this.prisma.vale.findMany({
       where: { id: { in: valeIds } },
       include: {
-        client: true,
+        client: {
+          select: {
+            id: true,
+            name: true,
+            cnpj: true,
+            email: true,
+          },
+        },
       },
     });
 

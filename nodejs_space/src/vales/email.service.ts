@@ -2,6 +2,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { PdfService } from './pdf.service';
 import * as nodemailer from 'nodemailer';
+import { SendEmailResponse } from '../types/api';
 
 @Injectable()
 export class EmailService {
@@ -29,7 +30,7 @@ export class EmailService {
     userId: string,
     valeIds: string[],
     recipientEmail: string,
-  ) {
+  ): Promise<SendEmailResponse> {
     try {
       // Generate PDF
       const pdfResult = await this.pdfService.generatePdf(userId, valeIds);

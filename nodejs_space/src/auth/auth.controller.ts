@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { SignupDto, LoginDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { AuthResponse, MeResponse, AuthUser } from '../types/api';
 
 @ApiTags('Authentication')
 @Controller('api')
@@ -14,7 +15,7 @@ export class AuthController {
   @ApiOperation({ summary: 'User signup with role selection' })
   @ApiResponse({ status: 201, description: 'User successfully created' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
-  async signup(@Body() signupDto: SignupDto) {
+  async signup(@Body() signupDto: SignupDto): Promise<AuthResponse> {
     return this.authService.signup(signupDto);
   }
 
@@ -22,7 +23,7 @@ export class AuthController {
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() loginDto: LoginDto): Promise<AuthResponse> {
     return this.authService.login(loginDto);
   }
 
@@ -32,7 +33,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user' })
   @ApiResponse({ status: 200, description: 'User retrieved' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getMe(@CurrentUser() user: any) {
+  async getMe(@CurrentUser() user: AuthUser): Promise<MeResponse> {
     return this.authService.getMe(user.userId);
   }
 }

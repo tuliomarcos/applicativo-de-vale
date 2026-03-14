@@ -44,7 +44,7 @@ export default function LoginScreen() {
       await login(email, password);
       showToast.success(successMessages.login);
       // Navigation handled by AuthContext
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       showToast.error(errorMessage);
     } finally {

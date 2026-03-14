@@ -2,13 +2,13 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useRouter, useSegments } from 'expo-router';
 import { api } from '../services/api';
 import { storage } from '../services/storage';
-import { User } from '../types';
+import { SignupPayload, User } from '../types';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (data: { name: string; phone: string; email: string; password: string; role: string }) => Promise<void>;
+  signup: (data: SignupPayload) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function signup(data: { name: string; phone: string; email: string; password: string; role: string }) {
+  async function signup(data: SignupPayload) {
     try {
       const { token, user: userData } = await api.signup(data);
       await storage.setToken(token);

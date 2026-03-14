@@ -26,7 +26,7 @@ export default function ClientesScreen() {
   const loadClientes = async () => {
     try {
       setLoading(true);
-      const params: any = {};
+      const params: { search?: string } = {};
       if (search) params.search = search;
       const response = await api.getClients(params);
       setClientes(response.items ?? []);

@@ -136,7 +136,7 @@ export default function CadastrarEmpresaScreen() {
 
       showToast.success(empresa ? successMessages.updateCompany : successMessages.createCompany);
       router.back();
-    } catch (error: any) {
+    } catch (error: unknown) {
       showToast.error(getErrorMessage(error));
     } finally {
       setLoading(false);

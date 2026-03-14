@@ -9,5 +9,6 @@ import { EmpresaModule } from '../empresa/empresa.module';
   imports: [EmpresaModule],
   controllers: [ValesController],
   providers: [ValesService, PdfService, EmailService],
+  exports: [ValesService],
 })
 export class ValesModule {}

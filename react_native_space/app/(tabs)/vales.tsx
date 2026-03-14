@@ -39,7 +39,7 @@ export default function ValesScreen() {
   const loadVales = async () => {
     try {
       setLoading(true);
-      const params: any = {};
+      const params: { type?: Exclude<FilterType, 'ALL'>; search?: string } = {};
       if (filter !== 'ALL') params.type = filter;
       if (search) params.search = search;
       const response = await api.getVales(params);
@@ -154,7 +154,7 @@ export default function ValesScreen() {
     return date.toLocaleDateString('pt-BR');
   };
 
-  const canEdit = user?.role === 'EMPRESA_TERRAPLANAGEM';
+  const canEdit = user?.role === 'EMPRESA';
 
   if (loading && vales.length === 0) {
     return <LoadingScreen />;

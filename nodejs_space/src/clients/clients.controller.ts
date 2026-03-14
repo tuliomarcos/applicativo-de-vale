@@ -20,6 +20,7 @@ import { ClientsService } from './clients.service';
 import { CreateClientDto, UpdateClientDto } from './dto/client.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser, ClientResponse, PaginatedResponse, SuccessResponse } from '../types/api';
 
 @ApiTags('Clients')
 @Controller('api/clients')
@@ -32,9 +33,9 @@ export class ClientsController {
   @ApiOperation({ summary: 'Create a new client' })
   @ApiResponse({ status: 201, description: 'Client created' })
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() createClientDto: CreateClientDto,
-  ) {
+  ): Promise<ClientResponse> {
     return this.clientsService.create(user.userId, createClientDto);
   }
 
@@ -48,7 +49,7 @@ export class ClientsController {
     @Query('search') search?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-  ) {
+  ): Promise<PaginatedResponse<ClientResponse>> {
     return this.clientsService.findAll(
       search,
       page ? parseInt(page) : 1,
@@ -60,7 +61,7 @@ export class ClientsController {
   @ApiOperation({ summary: 'Get client by ID' })
   @ApiResponse({ status: 200, description: 'Client retrieved' })
   @ApiResponse({ status: 404, description: 'Client not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<ClientResponse> {
     return this.clientsService.findOne(id);
   }
 
@@ -70,14 +71,14 @@ export class ClientsController {
   async update(
     @Param('id') id: string,
     @Body() updateClientDto: UpdateClientDto,
-  ) {
+  ): Promise<ClientResponse> {
     return this.clientsService.update(id, updateClientDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete client' })
   @ApiResponse({ status: 200, description: 'Client deleted' })
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string): Promise<SuccessResponse> {
     return this.clientsService.delete(id);
   }
 }

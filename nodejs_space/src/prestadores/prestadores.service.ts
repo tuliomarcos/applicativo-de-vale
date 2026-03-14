@@ -4,6 +4,7 @@ import {
   CreatePrestadorDto,
   UpdatePrestadorDto,
 } from './dto/prestador.dto';
+import { PaginatedResponse, PrestadorResponse, SuccessResponse } from '../types/api';
 
 @Injectable()
 export class PrestadoresService {
@@ -11,7 +12,10 @@ export class PrestadoresService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, createPrestadorDto: CreatePrestadorDto) {
+  async create(
+    userId: string,
+    createPrestadorDto: CreatePrestadorDto,
+  ): Promise<PrestadorResponse> {
     try {
       const prestador = await this.prisma.prestador.create({
         data: {
@@ -28,7 +32,11 @@ export class PrestadoresService {
     }
   }
 
-  async findAll(search?: string, page = 1, limit = 10) {
+  async findAll(
+    search?: string,
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResponse<PrestadorResponse>> {
     try {
       const skip = (page - 1) * limit;
 
@@ -64,7 +72,7 @@ export class PrestadoresService {
     }
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<PrestadorResponse> {
     try {
       const prestador = await this.prisma.prestador.findUnique({
         where: { id },
@@ -81,7 +89,10 @@ export class PrestadoresService {
     }
   }
 
-  async update(id: string, updatePrestadorDto: UpdatePrestadorDto) {
+  async update(
+    id: string,
+    updatePrestadorDto: UpdatePrestadorDto,
+  ): Promise<PrestadorResponse> {
     try {
       const prestador = await this.prisma.prestador.update({
         where: { id },
@@ -96,7 +107,7 @@ export class PrestadoresService {
     }
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<SuccessResponse> {
     try {
       await this.prisma.prestador.delete({ where: { id } });
       this.logger.log(`Prestador deleted: ${id}`);

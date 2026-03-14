@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+import { Canvas } from '@shopify/react-native-skia';
 import { theme, spacing, typography, borderRadius } from '../app/constants/theme';
 
 interface SignaturePadProps {
@@ -10,12 +10,7 @@ interface SignaturePadProps {
 }
 
 export function SignaturePad({ onSignatureChange, label }: SignaturePadProps) {
-  const paths = useRef<any[]>([]);
-  const currentPath = useRef<any>(null);
-
   const handleClear = () => {
-    paths.current = [];
-    currentPath.current = null;
     onSignatureChange('');
   };
 

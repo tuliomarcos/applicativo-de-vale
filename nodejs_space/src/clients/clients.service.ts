@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateClientDto, UpdateClientDto } from './dto/client.dto';
+import { ClientResponse, PaginatedResponse, SuccessResponse } from '../types/api';
 
 @Injectable()
 export class ClientsService {
@@ -8,7 +9,10 @@ export class ClientsService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, createClientDto: CreateClientDto) {
+  async create(
+    userId: string,
+    createClientDto: CreateClientDto,
+  ): Promise<ClientResponse> {
     try {
       const client = await this.prisma.client.create({
         data: {
@@ -25,7 +29,11 @@ export class ClientsService {
     }
   }
 
-  async findAll(search?: string, page = 1, limit = 10) {
+  async findAll(
+    search?: string,
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResponse<ClientResponse>> {
     try {
       const skip = (page - 1) * limit;
 
@@ -61,7 +69,7 @@ export class ClientsService {
     }
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ClientResponse> {
     try {
       const client = await this.prisma.client.findUnique({
         where: { id },
@@ -78,7 +86,10 @@ export class ClientsService {
     }
   }
 
-  async update(id: string, updateClientDto: UpdateClientDto) {
+  async update(
+    id: string,
+    updateClientDto: UpdateClientDto,
+  ): Promise<ClientResponse> {
     try {
       const client = await this.prisma.client.update({
         where: { id },
@@ -93,7 +104,7 @@ export class ClientsService {
     }
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<SuccessResponse> {
     try {
       await this.prisma.client.delete({ where: { id } });
       this.logger.log(`Client deleted: ${id}`);

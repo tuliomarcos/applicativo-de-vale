@@ -23,6 +23,12 @@ import {
 } from './dto/prestador.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import {
+  AuthUser,
+  PaginatedResponse,
+  PrestadorResponse,
+  SuccessResponse,
+} from '../types/api';
 
 @ApiTags('Prestadores (Service Providers)')
 @Controller('api/prestadores')
@@ -35,9 +41,9 @@ export class PrestadoresController {
   @ApiOperation({ summary: 'Create a new prestador' })
   @ApiResponse({ status: 201, description: 'Prestador created' })
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() createPrestadorDto: CreatePrestadorDto,
-  ) {
+  ): Promise<PrestadorResponse> {
     return this.prestadoresService.create(user.userId, createPrestadorDto);
   }
 
@@ -51,7 +57,7 @@ export class PrestadoresController {
     @Query('search') search?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-  ) {
+  ): Promise<PaginatedResponse<PrestadorResponse>> {
     return this.prestadoresService.findAll(
       search,
       page ? parseInt(page) : 1,
@@ -63,7 +69,7 @@ export class PrestadoresController {
   @ApiOperation({ summary: 'Get prestador by ID' })
   @ApiResponse({ status: 200, description: 'Prestador retrieved' })
   @ApiResponse({ status: 404, description: 'Prestador not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<PrestadorResponse> {
     return this.prestadoresService.findOne(id);
   }
 
@@ -73,14 +79,14 @@ export class PrestadoresController {
   async update(
     @Param('id') id: string,
     @Body() updatePrestadorDto: UpdatePrestadorDto,
-  ) {
+  ): Promise<PrestadorResponse> {
     return this.prestadoresService.update(id, updatePrestadorDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete prestador' })
   @ApiResponse({ status: 200, description: 'Prestador deleted' })
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string): Promise<SuccessResponse> {
     return this.prestadoresService.delete(id);
   }
 }
