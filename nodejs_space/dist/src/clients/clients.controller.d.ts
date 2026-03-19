@@ -1,18 +1,12 @@
 import { ClientsService } from './clients.service';
 import { CreateClientDto, UpdateClientDto } from './dto/client.dto';
+import type { AuthUser, ClientResponse, PaginatedResponse, SuccessResponse } from '../types/api';
 export declare class ClientsController {
     private readonly clientsService;
     constructor(clientsService: ClientsService);
-    create(user: any, createClientDto: CreateClientDto): Promise<any>;
-    findAll(search?: string, page?: string, limit?: string): Promise<{
-        items: any;
-        total: any;
-        page: number;
-        totalPages: number;
-    }>;
-    findOne(id: string): Promise<any>;
-    update(id: string, updateClientDto: UpdateClientDto): Promise<any>;
-    delete(id: string): Promise<{
-        success: boolean;
-    }>;
+    create(user: AuthUser, createClientDto: CreateClientDto): Promise<ClientResponse>;
+    findAll(search?: string, page?: string, limit?: string): Promise<PaginatedResponse<ClientResponse>>;
+    findOne(id: string): Promise<ClientResponse>;
+    update(id: string, updateClientDto: UpdateClientDto): Promise<ClientResponse>;
+    delete(id: string): Promise<SuccessResponse>;
 }

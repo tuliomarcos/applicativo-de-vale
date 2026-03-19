@@ -13,15 +13,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../database/prisma.service");
+const vales_service_1 = require("../vales/vales.service");
 let DashboardService = DashboardService_1 = class DashboardService {
     prisma;
+    valesService;
     logger = new common_1.Logger(DashboardService_1.name);
-    constructor(prisma) {
+    constructor(prisma, valesService) {
         this.prisma = prisma;
+        this.valesService = valesService;
     }
     async getStats() {
         try {
-            const [totalVales, totalClients, recentVales] = await Promise.all([
+            const [totalVales, totalClients, recentValesRaw] = await Promise.all([
                 this.prisma.vale.count(),
                 this.prisma.client.count(),
                 this.prisma.vale.findMany({
@@ -39,6 +42,7 @@ let DashboardService = DashboardService_1 = class DashboardService {
                     },
                 }),
             ]);
+            const recentVales = await Promise.all(recentValesRaw.map((vale) => this.valesService.formatValeResponse(vale)));
             return {
                 totalVales,
                 totalClients,
@@ -54,6 +58,7 @@ let DashboardService = DashboardService_1 = class DashboardService {
 exports.DashboardService = DashboardService;
 exports.DashboardService = DashboardService = DashboardService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        vales_service_1.ValesService])
 ], DashboardService);
 //# sourceMappingURL=dashboard.service.js.map

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { DashboardStatsResponse } from '../types/api';
 import { ValesService } from '../vales/vales.service';
+import type { ValeWithClientSummary } from '../vales/vales.service';
 
 @Injectable()
 export class DashboardService {
@@ -34,7 +35,9 @@ export class DashboardService {
       ]);
 
       const recentVales = await Promise.all(
-        recentValesRaw.map((vale) => this.valesService.formatValeResponse(vale)),
+        (recentValesRaw as ValeWithClientSummary[]).map((vale) =>
+          this.valesService.formatValeResponse(vale),
+        ),
       );
 
       return {

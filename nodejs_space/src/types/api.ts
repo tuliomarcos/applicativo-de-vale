@@ -1,21 +1,21 @@
-import {
-  Client,
-  DocumentType,
-  Empresa,
-  Prestador,
-  TripType,
-  User,
-  UserRole,
-  ValeType,
-} from '@prisma/client';
+export type UserRoleValue = 'PRESTADOR' | 'CLIENTE' | 'EMPRESA';
+export type TripTypeValue = 'ENTULHO' | 'TERRA';
+export type ValeTypeValue = 'VIAGEM' | 'DIARIA';
+export type DocumentTypeValue = 'CPF' | 'CNPJ';
 
 export type AuthUser = {
   userId: string;
   email: string;
-  role: UserRole;
+  role: UserRoleValue;
 };
 
-export type UserResponse = Pick<User, 'id' | 'email' | 'name' | 'phone' | 'role'>;
+export type UserResponse = {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  role: UserRoleValue;
+};
 
 export type AuthResponse = {
   token: string;
@@ -26,9 +26,30 @@ export type MeResponse = {
   user: UserResponse;
 };
 
-export type ClientResponse = Client;
+export type ClientResponse = {
+  id: string;
+  createdById: string;
+  name: string;
+  cnpj: string;
+  address: string;
+  phone: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-export type PrestadorResponse = Prestador;
+export type PrestadorResponse = {
+  id: string;
+  createdById: string;
+  name: string;
+  document: string;
+  documentType: DocumentTypeValue;
+  address: string;
+  phone: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export type EmpresaResponse = {
   id: string;
@@ -43,15 +64,18 @@ export type EmpresaResponse = {
   createdAt: Date;
 };
 
-export type ClientSummary = Pick<Client, 'id' | 'name' | 'cnpj' | 'email'>;
+export type ClientSummary = Pick<
+  ClientResponse,
+  'id' | 'name' | 'cnpj' | 'email'
+>;
 export type ClientDetail = Pick<
-  Client,
+  ClientResponse,
   'id' | 'name' | 'cnpj' | 'email' | 'address' | 'phone'
 >;
 
 export type ValeResponse = {
   id: string;
-  type: ValeType;
+  type: ValeTypeValue;
   clientId: string;
   client: ClientSummary | ClientDetail;
   workLocation: string;
@@ -61,7 +85,7 @@ export type ValeResponse = {
   createdAt: Date;
   truckPlate: string | null;
   driverName: string | null;
-  tripType: TripType | null;
+  tripType: TripTypeValue | null;
   operatorName: string | null;
   morningStart: string | null;
   morningEnd: string | null;
@@ -125,8 +149,3 @@ export type SendEmailResponse = {
 export type SuccessResponse = {
   success: true;
 };
-
-export type DocumentTypeValue = DocumentType;
-export type TripTypeValue = TripType;
-export type ValeTypeValue = ValeType;
-export type UserRoleValue = UserRole;

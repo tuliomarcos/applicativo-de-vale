@@ -23,7 +23,7 @@ import {
 } from './dto/prestador.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import {
+import type {
   AuthUser,
   PaginatedResponse,
   PrestadorResponse,

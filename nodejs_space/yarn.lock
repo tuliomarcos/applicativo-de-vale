@@ -2469,18 +2469,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/client@npm:6.7.0":
-  version: 6.7.0
-  resolution: "@prisma/client@npm:6.7.0"
+"@prisma/client-runtime-utils@npm:7.0.0":
+  version: 7.0.0
+  resolution: "@prisma/client-runtime-utils@npm:7.0.0"
+  checksum: 10c0/596eb1f41cb6d3adcbff9b4a8451c7919ae72e30f633ecf3d11dd1b687a535a59b0729b3ac91ca8d7b244c97fc1e4cbf7087f67a6c5197d3ce135a0cddc96e05
+  languageName: node
+  linkType: hard
+
+"@prisma/client@npm:7.0.0":
+  version: 7.0.0
+  resolution: "@prisma/client@npm:7.0.0"
+  dependencies:
+    "@prisma/client-runtime-utils": "npm:7.0.0"
   peerDependencies:
     prisma: "*"
-    typescript: ">=5.1.0"
+    typescript: ">=5.4.0"
   peerDependenciesMeta:
     prisma:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/863a8085800c8ada3247bc8b3f8a7056e341045f7f6fd73c7cd133b91298c8603f783869e5a7357d62394fa2ddac8c09ee27d7325bbb803a870edca5b914d33f
+  checksum: 10c0/700f2596bbcbcddbfe47facd198458774a62fa65a591f12e188019b2790747a0b2b1962f526a8a5e2fa2c23a24af228017fe3fb54875576b4d63f15c5e414823
   languageName: node
   linkType: hard
 
@@ -4782,9 +4791,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001759":
-  version: 1.0.30001778
-  resolution: "caniuse-lite@npm:1.0.30001778"
-  checksum: 10c0/830042e0a6af0796d3da4d9575f60966b92308c5504577993b618dd196c835d023dbd725fa8b47c33b74c487d75ce01ee3ebd6e7a078714989513110e8ff80e5
+  version: 1.0.30001779
+  resolution: "caniuse-lite@npm:1.0.30001779"
+  checksum: 10c0/6cae9492140722ebc6be76cf3057ff8d1b427c7d8c2588b92bba7979bb1ec7ece457c7d3578a099a757ec12cb01b893fe05f224ac8feb841072897f0c12de6cc
   languageName: node
   linkType: hard
 
@@ -7847,7 +7856,7 @@ __metadata:
     "@nestjs/schematics": "npm:^11.0.0"
     "@nestjs/swagger": "npm:^11.2.3"
     "@nestjs/testing": "npm:^11.0.1"
-    "@prisma/client": "npm:6.7.0"
+    "@prisma/client": "npm:7.0.0"
     "@types/bcryptjs": "npm:^3.0.0"
     "@types/express": "npm:^5.0.0"
     "@types/jest": "npm:^30.0.0"

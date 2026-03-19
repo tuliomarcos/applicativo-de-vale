@@ -1,0 +1,53 @@
+{
+  "last_reminder": 1773926985730,
+  "cached_at": 1773926981612,
+  "version": "6.7.0",
+  "cli_path": "C:\\Users\\DELL\\Desktop\\projects\\aplicativo_de_vale_v2\\nodejs_space\\node_modules\\prisma\\build\\index.js",
+  "output": {
+    "product": "prisma",
+    "previous_version": "6.7.0",
+    "checkpoint_version": 4,
+    "local_timestamp_without_timezone": "2026-03-19T10:29:39Z",
+    "current_version": "7.5.0",
+    "current_release_date": 1773240310,
+    "client_event_id": "5c6941db-529e-44b7-9daf-9ab096a0a8b4",
+    "current_download_url": "https://github.com/prisma/prisma",
+    "package": "prisma",
+    "release_tag": "latest",
+    "install_command": "npm install --save-dev prisma",
+    "schema_providers": [
+      "sqlite"
+    ],
+    "schema_preview_features": [],
+    "schema_generators_providers": [
+      "prisma-client-js"
+    ],
+    "current_changelog_url": "https://github.com/prisma/prisma",
+    "outdated": true,
+    "project_website": "https://prisma.io",
+    "alerts": []
+  },
+  "product": "prisma",
+  "cli_install_type": "local",
+  "local_timestamp": "2026-03-19T10:29:45-03:00",
+  "project_hash": "1489495c",
+  "cli_path_hash": "cf9cc665",
+  "endpoint": "https://checkpoint.prisma.io",
+  "arch": "x64",
+  "os": "win32",
+  "node_version": "v20.12.2",
+  "command": "db push",
+  "schema_providers": [
+    "sqlite"
+  ],
+  "schema_preview_features": [],
+  "schema_generators_providers": [
+    "prisma-client-js"
+  ],
+  "cache_file": "C:\\Users\\DELL\\Desktop\\projects\\aplicativo_de_vale_v2\\nodejs_space\\.home\\AppData\\Local\\checkpoint-nodejs\\Cache\\prisma-cf9cc665",
+  "cache_duration": 43200000,
+  "remind_duration": 172800000,
+  "timeout": 5000,
+  "unref": true,
+  "child_path": "C:\\Users\\DELL\\Desktop\\projects\\aplicativo_de_vale_v2\\nodejs_space\\node_modules\\prisma\\build\\child"
+}

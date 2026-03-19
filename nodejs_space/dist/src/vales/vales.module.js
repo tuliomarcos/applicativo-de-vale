@@ -21,6 +21,7 @@ exports.ValesModule = ValesModule = __decorate([
         imports: [empresa_module_1.EmpresaModule],
         controllers: [vales_controller_1.ValesController],
         providers: [vales_service_1.ValesService, pdf_service_1.PdfService, email_service_1.EmailService],
+        exports: [vales_service_1.ValesService],
     })
 ], ValesModule);
 //# sourceMappingURL=vales.module.js.map

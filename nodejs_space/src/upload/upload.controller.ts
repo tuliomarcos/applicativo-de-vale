@@ -24,7 +24,7 @@ import {
   GetPartUrlDto,
   CompleteMultipartDto,
 } from './dto/upload.dto';
-import {
+import type {
   AuthUser,
   CompleteUploadResponse,
   FileUrlResponse,

@@ -41,7 +41,7 @@ let UploadController = class UploadController {
         await this.uploadService.completeMultipartUpload(dto.cloud_storage_path, dto.uploadId, dto.parts);
         return { success: true };
     }
-    async getFileUrl(id, mode) {
+    async getFileUrl(id, mode = 'view') {
         return this.uploadService.getFileUrl(id, mode);
     }
     async deleteFile(id) {

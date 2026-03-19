@@ -17,7 +17,7 @@ import { EmpresaService } from './empresa.service';
 import { CreateEmpresaDto, UpdateEmpresaDto } from './dto/empresa.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { AuthUser, EmpresaResponse } from '../types/api';
+import type { AuthUser, EmpresaResponse } from '../types/api';
 
 @ApiTags('Empresa (Earthmoving Company)')
 @Controller('api/empresa')

@@ -288,12 +288,19 @@ let ValesService = ValesService_1 = class ValesService {
         };
     }
     async getValesByIds(valeIds) {
-        const vales = await this.prisma.vale.findMany({
+        const vales = (await this.prisma.vale.findMany({
             where: { id: { in: valeIds } },
             include: {
-                client: true,
+                client: {
+                    select: {
+                        id: true,
+                        name: true,
+                        cnpj: true,
+                        email: true,
+                    },
+                },
             },
-        });
+        }));
         return await Promise.all(vales.map((vale) => this.formatValeResponse(vale)));
     }
 };

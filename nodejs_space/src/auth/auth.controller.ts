@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { SignupDto, LoginDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
-import { AuthResponse, MeResponse, AuthUser } from '../types/api';
+import type { AuthResponse, MeResponse, AuthUser } from '../types/api';
 
 @ApiTags('Authentication')
 @Controller('api')

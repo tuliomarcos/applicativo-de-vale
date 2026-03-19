@@ -12,41 +12,42 @@ import {
   UpdateValeDto,
 } from './dto/vale.dto';
 import * as s3 from '../lib/s3';
-import { Prisma } from '@prisma/client';
 import {
   PaginatedResponse,
   ValeResponse,
   SuccessResponse,
   UserRoleValue,
+  ClientSummary,
+  ClientDetail,
+  TripTypeValue,
+  ValeTypeValue,
 } from '../types/api';
 
-type ValeWithClientSummary = Prisma.ValeGetPayload<{
-  include: {
-    client: {
-      select: {
-        id: true;
-        name: true;
-        cnpj: true;
-        email: true;
-      };
-    };
-  };
-}>;
+export type ValeWithClientSummary = {
+  id: string;
+  type: ValeTypeValue;
+  clientId: string;
+  client: ClientSummary;
+  workLocation: string;
+  date: Date;
+  signaturePath: string;
+  createdById: string;
+  createdAt: Date;
+  truckPlate: string | null;
+  driverName: string | null;
+  tripType: TripTypeValue | null;
+  operatorName: string | null;
+  morningStart: string | null;
+  morningEnd: string | null;
+  afternoonStart: string | null;
+  afternoonEnd: string | null;
+  totalHours: number | null;
+  equipment: string | null;
+};
 
-type ValeWithClientDetail = Prisma.ValeGetPayload<{
-  include: {
-    client: {
-      select: {
-        id: true;
-        name: true;
-        cnpj: true;
-        email: true;
-        address: true;
-        phone: true;
-      };
-    };
-  };
-}>;
+export type ValeWithClientDetail = Omit<ValeWithClientSummary, 'client'> & {
+  client: ClientDetail;
+};
 
 @Injectable()
 export class ValesService {
@@ -153,7 +154,7 @@ export class ValesService {
     try {
       const skip = (page - 1) * limit;
 
-      const where: Prisma.ValeWhereInput = {};
+      const where: Record<string, unknown> = {};
 
       if (type && (type === 'VIAGEM' || type === 'DIARIA')) {
         where.type = type;
@@ -184,12 +185,14 @@ export class ValesService {
               },
             },
           },
-        }),
+        }) as Promise<ValeWithClientSummary[]>,
         this.prisma.vale.count({ where }),
       ]);
 
       const formattedItems = await Promise.all(
-        items.map((item) => this.formatValeResponse(item)),
+        items.map((item: ValeWithClientSummary) =>
+          this.formatValeResponse(item),
+        ),
       );
 
       return {
@@ -367,7 +370,7 @@ export class ValesService {
   }
 
   async getValesByIds(valeIds: string[]): Promise<ValeResponse[]> {
-    const vales: ValeWithClientSummary[] = await this.prisma.vale.findMany({
+    const vales = (await this.prisma.vale.findMany({
       where: { id: { in: valeIds } },
       include: {
         client: {
@@ -379,7 +382,7 @@ export class ValesService {
           },
         },
       },
-    });
+    })) as ValeWithClientSummary[];
 
     return await Promise.all(
       vales.map((vale) => this.formatValeResponse(vale)),

@@ -20,7 +20,7 @@ import { ClientsService } from './clients.service';
 import { CreateClientDto, UpdateClientDto } from './dto/client.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { AuthUser, ClientResponse, PaginatedResponse, SuccessResponse } from '../types/api';
+import type { AuthUser, ClientResponse, PaginatedResponse, SuccessResponse } from '../types/api';
 
 @ApiTags('Clients')
 @Controller('api/clients')

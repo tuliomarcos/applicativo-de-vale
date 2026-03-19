@@ -1,31 +1,14 @@
 import { UploadService } from './upload.service';
 import { PresignedUploadDto, CompleteUploadDto, InitiateMultipartDto, GetPartUrlDto, CompleteMultipartDto } from './dto/upload.dto';
+import type { AuthUser, CompleteUploadResponse, FileUrlResponse, MultipartInitResponse, PartUrlResponse, PresignedUploadResponse, SuccessResponse } from '../types/api';
 export declare class UploadController {
     private readonly uploadService;
     constructor(uploadService: UploadService);
-    generatePresignedUrl(dto: PresignedUploadDto): Promise<{
-        uploadUrl: string;
-        cloud_storage_path: string;
-    }>;
-    completeUpload(user: any, dto: CompleteUploadDto): Promise<{
-        id: any;
-        cloud_storage_path: string;
-        url: string;
-    }>;
-    initiateMultipart(dto: InitiateMultipartDto): Promise<{
-        uploadId: string;
-        cloud_storage_path: string;
-    }>;
-    getPartUrl(dto: GetPartUrlDto): Promise<{
-        url: string;
-    }>;
-    completeMultipart(dto: CompleteMultipartDto): Promise<{
-        success: boolean;
-    }>;
-    getFileUrl(id: string, mode: string): Promise<{
-        url: string;
-    }>;
-    deleteFile(id: string): Promise<{
-        success: boolean;
-    }>;
+    generatePresignedUrl(dto: PresignedUploadDto): Promise<PresignedUploadResponse>;
+    completeUpload(user: AuthUser, dto: CompleteUploadDto): Promise<CompleteUploadResponse>;
+    initiateMultipart(dto: InitiateMultipartDto): Promise<MultipartInitResponse>;
+    getPartUrl(dto: GetPartUrlDto): Promise<PartUrlResponse>;
+    completeMultipart(dto: CompleteMultipartDto): Promise<SuccessResponse>;
+    getFileUrl(id: string, mode?: 'view' | 'download'): Promise<FileUrlResponse>;
+    deleteFile(id: string): Promise<SuccessResponse>;
 }

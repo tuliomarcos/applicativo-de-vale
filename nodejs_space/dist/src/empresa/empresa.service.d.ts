@@ -1,44 +1,12 @@
 import { PrismaService } from '../database/prisma.service';
 import { CreateEmpresaDto, UpdateEmpresaDto } from './dto/empresa.dto';
+import { EmpresaResponse } from '../types/api';
 export declare class EmpresaService {
     private prisma;
     private readonly logger;
     constructor(prisma: PrismaService);
-    create(userId: string, createEmpresaDto: CreateEmpresaDto): Promise<{
-        id: any;
-        name: any;
-        cnpj: any;
-        address: any;
-        phone: any;
-        primaryColor: any;
-        secondaryColor: any;
-        logoUrl: string | null;
-        userId: any;
-        createdAt: any;
-    }>;
-    getByUserId(userId: string): Promise<{
-        id: any;
-        name: any;
-        cnpj: any;
-        address: any;
-        phone: any;
-        primaryColor: any;
-        secondaryColor: any;
-        logoUrl: string | null;
-        userId: any;
-        createdAt: any;
-    } | null>;
-    update(id: string, updateEmpresaDto: UpdateEmpresaDto): Promise<{
-        id: any;
-        name: any;
-        cnpj: any;
-        address: any;
-        phone: any;
-        primaryColor: any;
-        secondaryColor: any;
-        logoUrl: string | null;
-        userId: any;
-        createdAt: any;
-    }>;
+    create(userId: string, createEmpresaDto: CreateEmpresaDto): Promise<EmpresaResponse>;
+    getByUserId(userId: string): Promise<EmpresaResponse | null>;
+    update(id: string, updateEmpresaDto: UpdateEmpresaDto): Promise<EmpresaResponse>;
     private getEmpresaWithLogo;
 }
