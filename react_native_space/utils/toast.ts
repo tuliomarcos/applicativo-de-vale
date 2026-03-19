@@ -127,15 +127,15 @@ export const getErrorMessage = (error: unknown): string => {
     const data = axiosError.response?.data;
     
     // Verificar se tem mensagem específica
-    if (data.message) {
-      if (Array.isArray(data.message)) {
+    if (data?.message) {
+      if (Array.isArray(data?.message)) {
         return errorMessages[data.message[0]] || data.message[0];
       }
       return errorMessages[data.message] || data.message;
     }
     
     // Verificar se tem erro específico
-    if (data.error) {
+    if (data?.error) {
       return errorMessages[data.error] || data.error;
     }
   }

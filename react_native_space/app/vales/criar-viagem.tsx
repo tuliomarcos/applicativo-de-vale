@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,12 +10,15 @@ import { SignaturePad } from '../../components/SignaturePad';
 import { ClientPicker } from '../../components/ClientPicker';
 import { api } from '../../services/api';
 import { Client, TripType } from '../../types';
-import { theme, spacing, typography, borderRadius } from '../constants/theme';
+import { spacing, typography, borderRadius } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function CriarViagemScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [client, setClient] = useState<Client | null>(null);
   const [truckPlate, setTruckPlate] = useState('');
   const [driverName, setDriverName] = useState('');
@@ -66,17 +69,17 @@ export default function CriarViagemScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Novo Vale Viagem</Text>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ClientPicker value={client} onChange={setClient} error={errors.client} />
+          <ClientPicker value={client} onChange={(c) => setClient(c)} error={errors.client} />
 
           <ThemedTextInput
             label="Placa do Caminhão"
@@ -128,7 +131,7 @@ export default function CriarViagemScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Data</Text>
             <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-              <Ionicons name="calendar-outline" size={20} color={theme.colors.onSurfaceVariant} />
+              <Ionicons name="calendar-outline" size={20} color={theme.textSecondary} />
               <Text style={styles.dateText}>{formatDate(date)}</Text>
             </TouchableOpacity>
           </View>
@@ -157,62 +160,63 @@ export default function CriarViagemScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  backButton: { marginRight: spacing.md },
-  title: { ...typography.heading, fontSize: 24 },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  section: { marginBottom: spacing.md },
-  sectionLabel: {
-    fontSize: 14,
-    color: theme.colors.onSurface,
-    marginBottom: spacing.sm,
-    fontWeight: '500',
-  },
-  tripTypeContainer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  tripTypeButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 2,
-    borderColor: theme.colors.outline,
-    alignItems: 'center',
-  },
-  tripTypeButtonActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-  },
-  tripTypeText: { ...typography.body, fontSize: 16 },
-  tripTypeTextActive: { color: theme.colors.primary, fontWeight: '600' },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surfaceVariant,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 16,
-    borderRadius: borderRadius.md,
-  },
-  dateText: { ...typography.body, marginLeft: spacing.sm },
-  errorText: {
-    fontSize: 12,
-    color: theme.colors.error,
-    marginTop: -spacing.sm,
-    marginBottom: spacing.md,
-  },
-  submitButton: { marginTop: spacing.lg },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: { flex: 1 },
+    container: { flex: 1 },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    backButton: { marginRight: spacing.md },
+    title: { ...typography.heading, fontSize: 24, color: theme.text },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    section: { marginBottom: spacing.md },
+    sectionLabel: {
+      fontSize: 14,
+      color: theme.text,
+      marginBottom: spacing.sm,
+      fontWeight: '500',
+    },
+    tripTypeContainer: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    tripTypeButton: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.md,
+      backgroundColor: theme.surface,
+      borderWidth: 2,
+      borderColor: theme.outline,
+      alignItems: 'center',
+    },
+    tripTypeButtonActive: {
+      borderColor: theme.primary,
+      backgroundColor: 'rgba(249, 115, 22, 0.1)',
+    },
+    tripTypeText: { ...typography.body, fontSize: 16, color: theme.text },
+    tripTypeTextActive: { color: theme.primary, fontWeight: '600' },
+    dateButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.surfaceVariant,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 16,
+      borderRadius: borderRadius.md,
+    },
+    dateText: { ...typography.body, marginLeft: spacing.sm, color: theme.text },
+    errorText: {
+      fontSize: 12,
+      color: theme.error,
+      marginTop: -spacing.sm,
+      marginBottom: spacing.md,
+    },
+    submitButton: { marginTop: spacing.lg },
+  });

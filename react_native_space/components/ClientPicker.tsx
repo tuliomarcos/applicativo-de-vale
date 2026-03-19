@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, Modal, FlatList, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme, spacing, typography, borderRadius } from '../app/constants/theme';
-
-interface Client {
-  id: string;
-  nome: string;
-}
+import { spacing, typography, borderRadius } from '../app/constants/theme';
+import { Client } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ClientPickerProps {
   clients?: Client[];
@@ -20,6 +17,8 @@ interface ClientPickerProps {
 
 export function ClientPicker({ clients, selectedClientId, onSelectClient, label, error }: ClientPickerProps) {
   const [modalVisible, setModalVisible] = useState(false);
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const selectedClient = clients?.find((c) => c?.id === selectedClientId);
 
   return (
@@ -30,9 +29,9 @@ export function ClientPicker({ clients, selectedClientId, onSelectClient, label,
         onPress={() => setModalVisible(true)}
       >
         <Text style={[styles.pickerText, !selectedClient && styles.placeholderText]}>
-          {selectedClient?.nome || 'Selecione um cliente'}
+          {selectedClient?.name || 'Selecione um cliente'}
         </Text>
-        <Ionicons name="chevron-down" size={20} color={theme.colors.textMuted} />
+        <Ionicons name="chevron-down" size={20} color={theme.textSecondary} />
       </Pressable>
       {error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -52,11 +51,11 @@ export function ClientPicker({ clients, selectedClientId, onSelectClient, label,
                 <Pressable
                   style={styles.clientItem}
                   onPress={() => {
-                    onSelectClient(item?.id || '');
+                    onSelectClient?.(item?.id || '');
                     setModalVisible(false);
                   }}
                 >
-                  <Text style={styles.clientName}>{item?.nome || ''}</Text>
+                  <Text style={styles.clientName}>{item?.name || ''}</Text>
                 </Pressable>
               )}
             />
@@ -67,68 +66,69 @@ export function ClientPicker({ clients, selectedClientId, onSelectClient, label,
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
-  label: {
-    ...typography.body,
-    color: theme.colors.text,
-    marginBottom: spacing.xs,
-    fontWeight: '600',
-  },
-  picker: {
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pickerError: {
-    borderColor: theme.colors.error,
-  },
-  pickerText: {
-    ...typography.body,
-    color: theme.colors.text,
-  },
-  placeholderText: {
-    color: theme.colors.textMuted,
-  },
-  errorText: {
-    ...typography.caption,
-    color: theme.colors.error,
-    marginTop: spacing.xs,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    paddingTop: spacing.lg,
-    maxHeight: '70%',
-  },
-  modalTitle: {
-    ...typography.heading,
-    color: theme.colors.text,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  clientItem: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  clientName: {
-    ...typography.body,
-    color: theme.colors.text,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+    },
+    label: {
+      ...typography.body,
+      color: theme.text,
+      marginBottom: spacing.xs,
+      fontWeight: '600',
+    },
+    picker: {
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    pickerError: {
+      borderColor: theme.error,
+    },
+    pickerText: {
+      ...typography.body,
+      color: theme.text,
+    },
+    placeholderText: {
+      color: theme.textSecondary,
+    },
+    errorText: {
+      ...typography.caption,
+      color: theme.error,
+      marginTop: spacing.xs,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: theme.surface,
+      borderTopLeftRadius: borderRadius.xl,
+      borderTopRightRadius: borderRadius.xl,
+      paddingTop: spacing.lg,
+      maxHeight: '70%',
+    },
+    modalTitle: {
+      ...typography.heading,
+      color: theme.text,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    clientItem: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    clientName: {
+      ...typography.body,
+      color: theme.text,
+    },
+  });

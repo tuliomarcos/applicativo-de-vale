@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,7 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import { DashboardStats, UserRole } from '../../types';
-import { theme, spacing, typography, borderRadius } from '../constants/theme';
+import { spacing, typography, borderRadius } from '../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ActionCard {
   title: string;
@@ -28,6 +29,8 @@ const actionCards: ActionCard[] = [
 export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +70,7 @@ export default function DashboardScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
@@ -81,7 +84,7 @@ export default function DashboardScreen() {
 
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <ActivityIndicator size="large" color={theme.primary} />
             </View>
           ) : (
             <>
@@ -103,10 +106,10 @@ export default function DashboardScreen() {
                     <TouchableOpacity
                       key={card.title}
                       style={styles.actionCard}
-                      onPress={() => router.push(card.route)}
+                      onPress={() => router.push(card.route as any)}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name={card.icon} size={32} color={theme.colors.primary} />
+                      <Ionicons name={card.icon} size={32} color={theme.primary} />
                       <Text style={styles.actionCardText}>{card.title}</Text>
                     </TouchableOpacity>
                   ))}
@@ -120,94 +123,97 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  header: {
-    marginBottom: spacing.lg,
-  },
-  greeting: {
-    ...typography.display,
-    fontSize: 28,
-    marginBottom: spacing.sm,
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  loadingContainer: {
-    paddingVertical: spacing.xxl,
-    alignItems: 'center',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-  },
-  statValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    ...typography.caption,
-    fontSize: 14,
-  },
-  actionsSection: {
-    marginTop: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.heading,
-    fontSize: 18,
-    marginBottom: spacing.md,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  actionCard: {
-    width: '47%',
-    backgroundColor: theme.colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 120,
-  },
-  actionCardText: {
-    ...typography.body,
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: spacing.md,
-    fontWeight: '600',
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    header: {
+      marginBottom: spacing.lg,
+    },
+    greeting: {
+      ...typography.display,
+      fontSize: 28,
+      color: theme.text,
+    },
+    badge: {
+      marginTop: spacing.xs,
+      alignSelf: 'flex-start',
+      backgroundColor: theme.surfaceVariant,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    badgeText: {
+      ...typography.bodySmall,
+      color: theme.textSecondary,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xl,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: spacing.xl,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: theme.surface,
+      padding: spacing.lg,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      marginRight: spacing.md,
+    },
+    statValue: {
+      ...typography.h1,
+      color: theme.text,
+      marginBottom: spacing.xs,
+    },
+    statLabel: {
+      ...typography.caption,
+      color: theme.textSecondary,
+    },
+    actionsSection: {
+      marginBottom: spacing.xl,
+    },
+    sectionTitle: {
+      ...typography.heading,
+      color: theme.text,
+      marginBottom: spacing.md,
+    },
+    actionsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    actionCard: {
+      width: '48%',
+      backgroundColor: theme.surface,
+      padding: spacing.lg,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      marginBottom: spacing.md,
+    },
+    actionCardText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+      marginTop: spacing.sm,
+    },
+  });

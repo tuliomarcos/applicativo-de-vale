@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,12 +6,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedTextInput } from '../../components/ThemedTextInput';
 import { GradientButton } from '../../components/GradientButton';
 import { useAuth } from '../../contexts/AuthContext';
-import { theme, spacing, typography } from '../constants/theme';
+import { spacing, typography } from '../constants/theme';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,7 +56,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.content}>
@@ -93,44 +96,48 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
-    justifyContent: 'center',
-  },
-  title: {
-    ...typography.display,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    ...typography.body,
-    marginBottom: spacing.xl,
-  },
-  form: {
-    width: '100%',
-  },
-  linkContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: spacing.lg,
-  },
-  linkText: {
-    ...typography.body,
-    fontSize: 14,
-  },
-  linkHighlight: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xxl,
+      justifyContent: 'center',
+    },
+    title: {
+      ...typography.display,
+      marginBottom: spacing.sm,
+      color: theme.text,
+    },
+    subtitle: {
+      ...typography.body,
+      marginBottom: spacing.xl,
+      color: theme.textSecondary,
+    },
+    form: {
+      width: '100%',
+    },
+    linkContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: spacing.lg,
+    },
+    linkText: {
+      ...typography.body,
+      fontSize: 14,
+      color: theme.text,
+    },
+    linkHighlight: {
+      color: theme.primary,
+      fontWeight: '600',
+    },
+  });

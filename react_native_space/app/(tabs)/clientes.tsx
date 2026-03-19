@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,11 +8,14 @@ import { api } from '../../services/api';
 import { Client } from '../../types';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import { EmptyState } from '../../components/EmptyState';
-import { theme, spacing, typography, borderRadius } from '../constants/theme';
+import { spacing, typography, borderRadius } from '../constants/theme';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function ClientesScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [clientes, setClientes] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -38,65 +41,89 @@ export default function ClientesScreen() {
     }
   };
 
-  const handleClientPress = (client: Client) => {
-    router.push(`/clientes/${client.id}`);
-  };
-
-  if (loading && clientes.length === 0) {
-    return <LoadingScreen />;
-  }
+  const filteredClientes = clientes.filter((c) => {
+    if (!search) return true;
+    return (
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.email.toLowerCase().includes(search.toLowerCase()) ||
+      c.cnpj.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
+          </TouchableOpacity>
           <Text style={styles.title}>Clientes</Text>
         </View>
 
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar por nome, CNPJ..."
-            placeholderTextColor={theme.colors.onSurfaceVariant}
-            value={search}
-            onChangeText={setSearch}
-          />
+        <View style={styles.searchCard}>
+          <View style={styles.searchRow}>
+            <Ionicons name="search" size={20} color={theme.textSecondary} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar por nome ou CNPJ"
+              placeholderTextColor={theme.textSecondary}
+              value={search}
+              onChangeText={setSearch}
+            />
+          </View>
         </View>
 
-        <ScrollView style={styles.listContainer} contentContainerStyle={styles.listContent}>
-          {clientes.length === 0 ? (
+        {loading ? (
+          <LoadingScreen />
+        ) : filteredClientes.length === 0 ? (
+          <>
             <EmptyState
-              icon="people-outline"
               title="Nenhum cliente encontrado"
-              description="Cadastre um novo cliente para começar"
+              description="Cadastre um cliente para começar a gerar vales."
             />
-          ) : (
-            clientes.map((cliente) => (
+            <TouchableOpacity
+              style={styles.emptyAction}
+              onPress={() => router.push('/clientes/cadastrar')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyActionText}>Cadastrar cliente</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <ScrollView contentContainerStyle={styles.listContent}>
+            {filteredClientes.map((client) => (
               <TouchableOpacity
-                key={cliente.id}
+                key={client.id}
                 style={styles.clientCard}
-                onPress={() => handleClientPress(cliente)}
+                onPress={() => router.push(`/clientes/${client.id}` as any)}
               >
                 <View style={styles.clientHeader}>
                   <View style={styles.clientIcon}>
-                    <Ionicons name="person" size={24} color={theme.colors.primary} />
+                    <Ionicons name="business" size={20} color={theme.primary} />
                   </View>
                   <View style={styles.clientInfo}>
-                    <Text style={styles.clientName}>{cliente.name}</Text>
-                    <Text style={styles.clientDetail}>CNPJ: {cliente.cnpj}</Text>
-                    <Text style={styles.clientDetail}>Telefone: {cliente.phone}</Text>
+                    <Text style={styles.clientName}>{client.name}</Text>
+                    <Text style={styles.clientDetail}>{client.cnpj}</Text>
+                    <Text style={styles.clientDetail}>{client.email}</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={24} color={theme.colors.onSurfaceVariant} />
                 </View>
               </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        )}
 
-        <TouchableOpacity style={styles.fab} onPress={() => router.push('/clientes/cadastrar')}>
-          <LinearGradient colors={['#F97316', '#F59E0B']} style={styles.fabGradient}>
-            <Ionicons name="add" size={28} color="#FFFFFF" />
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push('/clientes/cadastrar')}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={[theme.gradientStart, theme.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.fabGradient}
+          >
+            <Ionicons name="add" size={26} color="#000000" />
           </LinearGradient>
         </TouchableOpacity>
       </SafeAreaView>
@@ -104,75 +131,113 @@ export default function ClientesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  container: { flex: 1 },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  title: { ...typography.display, fontSize: 28 },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surfaceVariant,
-    marginHorizontal: spacing.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.md,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: spacing.sm,
-    color: theme.colors.onSurface,
-    fontSize: 16,
-  },
-  listContainer: { flex: 1 },
-  listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
-  clientCard: {
-    backgroundColor: theme.colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-  },
-  clientHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  clientIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  clientInfo: { flex: 1 },
-  clientName: { ...typography.body, fontSize: 16, fontWeight: '600', marginBottom: 4 },
-  clientDetail: { ...typography.caption, fontSize: 13, marginBottom: 2 },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.lg + 60,
-    right: spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  fabGradient: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: { flex: 1 },
+    container: { flex: 1, backgroundColor: theme.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      justifyContent: 'space-between',
+    },
+    backButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      marginRight: spacing.md,
+    },
+    title: {
+      ...typography.display,
+      fontSize: 26,
+      color: theme.text,
+      flex: 1,
+    },
+    searchCard: {
+      marginHorizontal: spacing.lg,
+      backgroundColor: theme.surface,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    searchInput: {
+      flex: 1,
+      ...typography.body,
+      color: theme.text,
+      marginLeft: spacing.sm,
+    },
+    listContent: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xl,
+      gap: spacing.md,
+    },
+    clientCard: {
+      backgroundColor: theme.surface,
+      padding: spacing.lg,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    clientHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    clientIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: 'rgba(249, 115, 22, 0.1)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: spacing.md,
+    },
+    clientInfo: { flex: 1 },
+    clientName: { ...typography.body, fontSize: 16, fontWeight: '600', marginBottom: 4, color: theme.text },
+    clientDetail: { ...typography.caption, fontSize: 13, marginBottom: 2, color: theme.textSecondary },
+    fab: {
+      position: 'absolute',
+      bottom: spacing.lg + 60,
+      right: spacing.lg,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      overflow: 'hidden',
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+    fabGradient: {
+      width: '100%',
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyAction: {
+      marginTop: spacing.lg,
+      marginHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+      backgroundColor: theme.primary,
+    },
+    emptyActionText: {
+      ...typography.body,
+      fontWeight: '600',
+      color: '#000000',
+    },
+  });

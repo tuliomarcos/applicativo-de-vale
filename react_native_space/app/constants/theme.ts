@@ -125,13 +125,15 @@ export const borderRadius = {
   full: 9999,
 };
 
-export const presetColors = [
-  { primary: '#7C3AED', secondary: '#EC4899' }, // Violet + Pink (default)
-  { primary: '#F97316', secondary: '#EF4444' }, // Orange + Red
-  { primary: '#4F46E5', secondary: '#06B6D4' }, // Indigo + Cyan
-  { primary: '#10B981', secondary: '#6366F1' }, // Green + Indigo
-  { primary: '#E11D48', secondary: '#F59E0B' }, // Rose + Amber
-  { primary: '#0EA5E9', secondary: '#8B5CF6' }, // Sky + Purple
-  { primary: '#14B8A6', secondary: '#F43F5E' }, // Teal + Rose
-  { primary: '#6366F1', secondary: '#10B981' }, // Indigo + Green
+export const presetColors: string[] = [
+  '#F97316', // Laranja
+  '#FFA94D', // Laranja claro
+  '#EF4444', // Vermelho
+  '#7C3AED', // Roxo
+  '#4F46E5', // Indigo
+  '#06B6D4', // Cyan
+  '#10B981', // Verde
+  '#E11D48', // Rose
+  '#0EA5E9', // Sky
+  '#8B5CF6', // Purple
 ];

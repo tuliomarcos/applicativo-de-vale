@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,14 +12,17 @@ import { Vale } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import { EmptyState } from '../../components/EmptyState';
-import { theme, spacing, typography, borderRadius } from '../constants/theme';
+import { spacing, typography, borderRadius } from '../constants/theme';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type FilterType = 'ALL' | 'VIAGEM' | 'DIARIA';
 
 export default function ValesScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [vales, setVales] = useState<Vale[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>('ALL');
@@ -161,18 +164,18 @@ export default function ValesScreen() {
   }
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Vales</Text>
         </View>
 
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} />
+          <Ionicons name="search" size={20} color={theme.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar por cliente, placa, local..."
-            placeholderTextColor={theme.colors.onSurfaceVariant}
+            placeholderTextColor={theme.textSecondary}
             value={search}
             onChangeText={setSearch}
           />
@@ -254,31 +257,31 @@ export default function ValesScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Ações</Text>
             <TouchableOpacity style={styles.modalOption} onPress={handleView}>
-              <Ionicons name="eye-outline" size={24} color={theme.colors.onSurface} />
+              <Ionicons name="eye-outline" size={24} color={theme.text} />
               <Text style={styles.modalOptionText}>Visualizar</Text>
             </TouchableOpacity>
             {canEdit && (
               <>
                 <TouchableOpacity style={styles.modalOption} onPress={handleEdit}>
-                  <Ionicons name="create-outline" size={24} color={theme.colors.onSurface} />
+                  <Ionicons name="create-outline" size={24} color={theme.text} />
                   <Text style={styles.modalOptionText}>Editar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalOption} onPress={handleDelete}>
-                  <Ionicons name="trash-outline" size={24} color={theme.colors.error} />
-                  <Text style={[styles.modalOptionText, { color: theme.colors.error }]}>Apagar</Text>
+                  <Ionicons name="trash-outline" size={24} color={theme.error} />
+                  <Text style={[styles.modalOptionText, { color: theme.error }]}>Apagar</Text>
                 </TouchableOpacity>
               </>
             )}
             <TouchableOpacity style={styles.modalOption} onPress={handleGeneratePDF}>
-              <Ionicons name="document-outline" size={24} color={theme.colors.onSurface} />
+              <Ionicons name="document-outline" size={24} color={theme.text} />
               <Text style={styles.modalOptionText}>Gerar PDF</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalOption} onPress={() => { setShowActions(false); setShowEmailModal(true); }}>
-              <Ionicons name="mail-outline" size={24} color={theme.colors.onSurface} />
+              <Ionicons name="mail-outline" size={24} color={theme.text} />
               <Text style={styles.modalOptionText}>Enviar por Email</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalOption} onPress={handleWhatsApp}>
-              <Ionicons name="logo-whatsapp" size={24} color={theme.colors.success} />
+              <Ionicons name="logo-whatsapp" size={24} color={theme.success} />
               <Text style={styles.modalOptionText}>Enviar por WhatsApp</Text>
             </TouchableOpacity>
           </View>
@@ -300,7 +303,7 @@ export default function ValesScreen() {
                 router.push('/vales/criar-viagem');
               }}
             >
-              <Ionicons name="car-outline" size={24} color={theme.colors.onSurface} />
+              <Ionicons name="car-outline" size={24} color={theme.text} />
               <Text style={styles.modalOptionText}>Vale Viagem</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -310,7 +313,7 @@ export default function ValesScreen() {
                 router.push('/vales/criar-diaria');
               }}
             >
-              <Ionicons name="time-outline" size={24} color={theme.colors.onSurface} />
+              <Ionicons name="time-outline" size={24} color={theme.text} />
               <Text style={styles.modalOptionText}>Vale Diária</Text>
             </TouchableOpacity>
           </View>
@@ -328,7 +331,7 @@ export default function ValesScreen() {
             <TextInput
               style={styles.emailInput}
               placeholder="Digite o email do destinatário"
-              placeholderTextColor={theme.colors.onSurfaceVariant}
+              placeholderTextColor={theme.textSecondary}
               value={recipientEmail}
               onChangeText={setRecipientEmail}
               keyboardType="email-address"
@@ -348,127 +351,128 @@ export default function ValesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  container: { flex: 1 },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  title: { ...typography.display, fontSize: 28 },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surfaceVariant,
-    marginHorizontal: spacing.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.md,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: spacing.sm,
-    color: theme.colors.onSurface,
-    fontSize: 16,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  filterChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-  },
-  filterChipActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  filterChipText: { ...typography.body, fontSize: 14 },
-  filterChipTextActive: { color: '#FFFFFF', fontWeight: '600' },
-  listContainer: { flex: 1 },
-  listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
-  valeCard: {
-    backgroundColor: theme.colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-  },
-  valeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  typeBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: borderRadius.sm,
-  },
-  typeBadgeViagem: { backgroundColor: '#3B82F6' },
-  typeBadgeDiaria: { backgroundColor: '#10B981' },
-  typeBadgeText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
-  valeDate: { ...typography.caption, fontSize: 12 },
-  valeClient: { ...typography.body, fontSize: 16, fontWeight: '600', marginBottom: 4 },
-  valeLocation: { ...typography.body, fontSize: 14, marginBottom: 4 },
-  valeDetail: { ...typography.caption, fontSize: 12 },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.lg + 60,
-    right: spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  fabGradient: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modal: { justifyContent: 'flex-end', margin: 0 },
-  modalContent: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    padding: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  modalTitle: { ...typography.heading, fontSize: 20, marginBottom: spacing.lg },
-  modalOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  modalOptionText: { ...typography.body, fontSize: 16, marginLeft: spacing.md },
-  emailInput: {
-    backgroundColor: theme.colors.surfaceVariant,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    color: theme.colors.onSurface,
-    fontSize: 16,
-    marginBottom: spacing.md,
-  },
-  sendButton: {
-    backgroundColor: theme.colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  sendButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: { flex: 1 },
+    container: { flex: 1 },
+    header: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    title: { ...typography.display, fontSize: 28, color: theme.text },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.surfaceVariant,
+      marginHorizontal: spacing.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.md,
+      marginBottom: spacing.md,
+    },
+    searchInput: {
+      flex: 1,
+      marginLeft: spacing.sm,
+      color: theme.text,
+      fontSize: 16,
+    },
+    filterContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    filterChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    filterChipActive: {
+      backgroundColor: theme.primary,
+      borderColor: theme.primary,
+    },
+    filterChipText: { ...typography.body, fontSize: 14, color: theme.text },
+    filterChipTextActive: { color: '#FFFFFF', fontWeight: '600' },
+    listContainer: { flex: 1 },
+    listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
+    valeCard: {
+      backgroundColor: theme.surface,
+      padding: spacing.lg,
+      borderRadius: borderRadius.lg,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    valeHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.sm,
+    },
+    typeBadge: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+      borderRadius: borderRadius.sm,
+    },
+    typeBadgeViagem: { backgroundColor: '#3B82F6' },
+    typeBadgeDiaria: { backgroundColor: '#10B981' },
+    typeBadgeText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
+    valeDate: { ...typography.caption, fontSize: 12, color: theme.textSecondary },
+    valeClient: { ...typography.body, fontSize: 16, fontWeight: '600', marginBottom: 4, color: theme.text },
+    valeLocation: { ...typography.body, fontSize: 14, marginBottom: 4, color: theme.textSecondary },
+    valeDetail: { ...typography.caption, fontSize: 12, color: theme.textSecondary },
+    fab: {
+      position: 'absolute',
+      bottom: spacing.lg + 60,
+      right: spacing.lg,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      overflow: 'hidden',
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+    fabGradient: {
+      width: '100%',
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modal: { justifyContent: 'flex-end', margin: 0 },
+    modalContent: {
+      backgroundColor: theme.surface,
+      borderTopLeftRadius: borderRadius.xl,
+      borderTopRightRadius: borderRadius.xl,
+      padding: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    modalTitle: { ...typography.heading, fontSize: 20, marginBottom: spacing.lg, color: theme.text },
+    modalOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+    },
+    modalOptionText: { ...typography.body, fontSize: 16, marginLeft: spacing.md, color: theme.text },
+    emailInput: {
+      backgroundColor: theme.surfaceVariant,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      color: theme.text,
+      fontSize: 16,
+      marginBottom: spacing.md,
+    },
+    sendButton: {
+      backgroundColor: theme.primary,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+    },
+    sendButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  });

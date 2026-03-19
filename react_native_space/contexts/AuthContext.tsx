@@ -28,11 +28,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLoading) return;
 
     const inAuthGroup = segments?.[0] === 'auth';
+    const segmentLength = segments?.length ? Number(segments.length) : 0;
 
     if (!user && !inAuthGroup) {
       // Redirect to login if not authenticated
       router.replace('/');
-    } else if (user && (inAuthGroup || (segments?.length ?? 0) === 0)) {
+    } else if (user && (inAuthGroup || segmentLength === 0)) {
       // Redirect to home if authenticated and in auth screens
       router.replace('/(tabs)');
     }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,11 +7,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedTextInput } from '../../components/ThemedTextInput';
 import { GradientButton } from '../../components/GradientButton';
 import { api } from '../../services/api';
-import { theme, spacing, typography } from '../constants/theme';
+import { spacing, typography } from '../constants/theme';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function CadastrarClienteScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [name, setName] = useState('');
   const [cnpj, setCnpj] = useState('');
   const [address, setAddress] = useState('');
@@ -57,82 +60,104 @@ export default function CadastrarClienteScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Novo Cliente</Text>
-        </View>
-
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ThemedTextInput
-            label="Nome"
-            value={name}
-            onChangeText={setName}
-            icon="person-outline"
-            error={errors.name}
-          />
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={theme.text} />
+            </TouchableOpacity>
+            <Text style={styles.title}>Cadastrar Cliente</Text>
+          </View>
 
-          <ThemedTextInput
-            label="CNPJ"
-            value={cnpj}
-            onChangeText={setCnpj}
-            keyboardType="numeric"
-            icon="card-outline"
-            error={errors.cnpj}
-          />
+          <View style={styles.form}>
+            <ThemedTextInput
+              label="Nome"
+              value={name}
+              onChangeText={setName}
+              icon="person-outline"
+              error={errors.name}
+            />
+            <ThemedTextInput
+              label="CNPJ"
+              value={cnpj}
+              onChangeText={setCnpj}
+              keyboardType="numeric"
+              icon="card-outline"
+              error={errors.cnpj}
+            />
+            <ThemedTextInput
+              label="Endereço"
+              value={address}
+              onChangeText={setAddress}
+              icon="location-outline"
+              error={errors.address}
+            />
+            <ThemedTextInput
+              label="Telefone"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              icon="call-outline"
+              error={errors.phone}
+            />
+            <ThemedTextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              icon="mail-outline"
+              error={errors.email}
+            />
 
-          <ThemedTextInput
-            label="Endereço"
-            value={address}
-            onChangeText={setAddress}
-            icon="location-outline"
-            error={errors.address}
-          />
-
-          <ThemedTextInput
-            label="Telefone"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            icon="call-outline"
-            error={errors.phone}
-          />
-
-          <ThemedTextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            icon="mail-outline"
-            error={errors.email}
-          />
-
-          <GradientButton title="Salvar" onPress={handleSubmit} loading={loading} style={styles.submitButton} />
+            <GradientButton title="Salvar" onPress={handleSubmit} loading={loading} style={styles.submitButton} />
+          </View>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  backButton: { marginRight: spacing.md },
-  title: { ...typography.heading, fontSize: 24 },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  submitButton: { marginTop: spacing.lg },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: { flex: 1 },
+    container: { flex: 1 },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    backButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.surface,
+      marginRight: spacing.md,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    title: {
+      ...typography.display,
+      fontSize: 24,
+      color: theme.text,
+    },
+    form: {
+      backgroundColor: theme.surface,
+      padding: spacing.lg,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      gap: spacing.sm,
+    },
+    submitButton: {
+      marginTop: spacing.lg,
+    },
+  });

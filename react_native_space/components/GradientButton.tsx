@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, Text, StyleSheet, ActivityIndicator, PressableProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme, spacing, typography } from '../app/constants/theme';
+import { spacing, typography } from '../app/constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface GradientButtonProps extends Omit<PressableProps, 'children'> {
   title: string;
@@ -16,9 +17,14 @@ export function GradientButton({
   disabled, 
   ...props 
 }: GradientButtonProps) {
-  const colors = variant === 'primary' 
-    ? theme.colors.gradient.primary 
-    : [theme.colors.surfaceElevated, theme.colors.surface];
+  const { theme } = useTheme();
+  const colors = useMemo(
+    () =>
+      (variant === 'primary'
+        ? [theme.primary, theme.secondary]
+        : [theme.surface, theme.surfaceVariant]) as [string, string],
+    [variant, theme]
+  );
 
   return (
     <Pressable {...props} disabled={disabled || loading} style={({ pressed }) => [

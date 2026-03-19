@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,12 +10,15 @@ import { SignaturePad } from '../../components/SignaturePad';
 import { ClientPicker } from '../../components/ClientPicker';
 import { api } from '../../services/api';
 import { Client } from '../../types';
-import { theme, spacing, typography, borderRadius } from '../constants/theme';
+import { spacing, typography, borderRadius } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function CriarDiariaScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [client, setClient] = useState<Client | null>(null);
   const [operatorName, setOperatorName] = useState('');
   const [workLocation, setWorkLocation] = useState('');
@@ -119,17 +122,17 @@ export default function CriarDiariaScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Novo Vale Diária</Text>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ClientPicker value={client} onChange={setClient} error={errors.client} />
+          <ClientPicker value={client} onChange={(c) => setClient(c)} error={errors.client} />
 
           <ThemedTextInput
             label="Nome do Operador"
@@ -150,7 +153,7 @@ export default function CriarDiariaScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Data</Text>
             <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-              <Ionicons name="calendar-outline" size={20} color={theme.colors.onSurfaceVariant} />
+              <Ionicons name="calendar-outline" size={20} color={theme.textSecondary} />
               <Text style={styles.dateText}>{formatDate(date)}</Text>
             </TouchableOpacity>
           </View>
@@ -243,83 +246,85 @@ export default function CriarDiariaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  backButton: { marginRight: spacing.md },
-  title: { ...typography.heading, fontSize: 24 },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  section: { marginBottom: spacing.md },
-  sectionLabel: {
-    fontSize: 14,
-    color: theme.colors.onSurface,
-    marginBottom: spacing.sm,
-    fontWeight: '500',
-  },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surfaceVariant,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 16,
-    borderRadius: borderRadius.md,
-  },
-  dateText: { ...typography.body, marginLeft: spacing.sm },
-  timeSection: { marginBottom: spacing.md },
-  timeSectionLabel: {
-    fontSize: 13,
-    color: theme.colors.onSurfaceVariant,
-    marginBottom: spacing.sm,
-    fontWeight: '500',
-  },
-  timeRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  timeButton: {
-    flex: 1,
-    backgroundColor: theme.colors.surfaceVariant,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  timeButtonLabel: {
-    fontSize: 12,
-    color: theme.colors.onSurfaceVariant,
-    marginBottom: 4,
-  },
-  timeButtonValue: {
-    ...typography.body,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  totalHoursBadge: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    alignSelf: 'flex-start',
-    marginTop: spacing.sm,
-  },
-  totalHoursText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  errorText: {
-    fontSize: 12,
-    color: theme.colors.error,
-    marginTop: spacing.xs,
-  },
-  submitButton: { marginTop: spacing.lg },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: { flex: 1 },
+    container: { flex: 1 },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    backButton: { marginRight: spacing.md },
+    title: { ...typography.heading, fontSize: 24, color: theme.text },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    section: { marginBottom: spacing.md },
+    sectionLabel: {
+      fontSize: 14,
+      color: theme.text,
+      marginBottom: spacing.sm,
+      fontWeight: '500',
+    },
+    dateButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.surfaceVariant,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 16,
+      borderRadius: borderRadius.md,
+    },
+    dateText: { ...typography.body, marginLeft: spacing.sm, color: theme.text },
+    timeSection: { marginBottom: spacing.md },
+    timeSectionLabel: {
+      fontSize: 13,
+      color: theme.textSecondary,
+      marginBottom: spacing.sm,
+      fontWeight: '500',
+    },
+    timeRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    timeButton: {
+      flex: 1,
+      backgroundColor: theme.surfaceVariant,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+    },
+    timeButtonLabel: {
+      fontSize: 12,
+      color: theme.textSecondary,
+      marginBottom: 4,
+    },
+    timeButtonValue: {
+      ...typography.body,
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.text,
+    },
+    totalHoursBadge: {
+      backgroundColor: theme.primary,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      alignSelf: 'flex-start',
+      marginTop: spacing.sm,
+    },
+    totalHoursText: {
+      color: '#000000',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    errorText: {
+      fontSize: 12,
+      color: theme.error,
+      marginTop: spacing.xs,
+    },
+    submitButton: { marginTop: spacing.lg },
+  });

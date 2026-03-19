@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ColorSchemes, ThemeMode, ColorScheme } from '../constants/colors';
+import { createTheme } from '../app/constants/theme';
 
 interface ThemeContextType {
   theme: ColorScheme;
+  uiTheme: ReturnType<typeof createTheme>;
   themeMode: ThemeMode;
   toggleTheme: () => void;
   setTheme: (mode: ThemeMode) => void;
@@ -62,9 +64,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const theme = ColorSchemes[themeMode];
+  const uiTheme = useMemo(() => createTheme(themeMode), [themeMode]);
 
   return (
-    <ThemeContext.Provider value={{ theme, themeMode, toggleTheme, setTheme, isLoading }}>
+    <ThemeContext.Provider value={{ theme, uiTheme, themeMode, toggleTheme, setTheme, isLoading }}>
       {children}
     </ThemeContext.Provider>
   );

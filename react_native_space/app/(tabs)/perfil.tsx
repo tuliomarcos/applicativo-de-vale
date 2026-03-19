@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,12 +6,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { ThemeToggle } from '../../components/ThemeToggle';
-import { theme, spacing, typography, borderRadius } from '../constants/theme';
+import { spacing, typography, borderRadius } from '../constants/theme';
 import { UserRole } from '../../types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function PerfilScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -44,14 +47,14 @@ export default function PerfilScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text style={styles.title}>Perfil</Text>
 
           <View style={styles.card}>
             <View style={styles.infoRow}>
-              <Ionicons name="person-outline" size={20} color={theme.colors.onSurfaceVariant} />
+              <Ionicons name="person-outline" size={20} color={theme.textSecondary} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Nome</Text>
                 <Text style={styles.infoValue}>{user?.name}</Text>
@@ -61,7 +64,7 @@ export default function PerfilScreen() {
             <View style={styles.divider} />
 
             <View style={styles.infoRow}>
-              <Ionicons name="mail-outline" size={20} color={theme.colors.onSurfaceVariant} />
+              <Ionicons name="mail-outline" size={20} color={theme.textSecondary} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Email</Text>
                 <Text style={styles.infoValue}>{user?.email}</Text>
@@ -71,7 +74,7 @@ export default function PerfilScreen() {
             <View style={styles.divider} />
 
             <View style={styles.infoRow}>
-              <Ionicons name="call-outline" size={20} color={theme.colors.onSurfaceVariant} />
+              <Ionicons name="call-outline" size={20} color={theme.textSecondary} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Telefone</Text>
                 <Text style={styles.infoValue}>{user?.phone}</Text>
@@ -81,7 +84,7 @@ export default function PerfilScreen() {
             <View style={styles.divider} />
 
             <View style={styles.infoRow}>
-              <Ionicons name="briefcase-outline" size={20} color={theme.colors.onSurfaceVariant} />
+              <Ionicons name="briefcase-outline" size={20} color={theme.textSecondary} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Tipo de Perfil</Text>
                 <Text style={styles.infoValue}>{getRoleName(user?.role ?? '')}</Text>
@@ -94,9 +97,9 @@ export default function PerfilScreen() {
               style={styles.button}
               onPress={() => router.push('/empresa/cadastrar')}
             >
-              <Ionicons name="business-outline" size={20} color={theme.colors.primary} />
+              <Ionicons name="business-outline" size={20} color={theme.primary} />
               <Text style={styles.buttonText}>Minha Empresa</Text>
-              <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
+              <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
             </TouchableOpacity>
           )}
 
@@ -105,7 +108,7 @@ export default function PerfilScreen() {
           </View>
 
           <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={20} color={theme.colors.error} />
+            <Ionicons name="log-out-outline" size={20} color={theme.error} />
             <Text style={[styles.buttonText, styles.logoutText]}>Sair</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -114,75 +117,80 @@ export default function PerfilScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  title: {
-    ...typography.display,
-    fontSize: 28,
-    marginBottom: spacing.lg,
-  },
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    marginBottom: spacing.lg,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  infoContent: {
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  infoLabel: {
-    ...typography.caption,
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  infoValue: {
-    ...typography.body,
-    fontSize: 16,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.outline,
-    marginVertical: spacing.sm,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    marginBottom: spacing.md,
-  },
-  buttonText: {
-    ...typography.body,
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  logoutButton: {
-    marginTop: spacing.lg,
-  },
-  logoutText: {
-    color: theme.colors.error,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    title: {
+      ...typography.display,
+      fontSize: 28,
+      marginBottom: spacing.lg,
+      color: theme.text,
+    },
+    card: {
+      backgroundColor: theme.surface,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      marginBottom: spacing.lg,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+    },
+    infoContent: {
+      marginLeft: spacing.md,
+      flex: 1,
+    },
+    infoLabel: {
+      ...typography.caption,
+      fontSize: 12,
+      marginBottom: 2,
+      color: theme.textSecondary,
+    },
+    infoValue: {
+      ...typography.body,
+      fontSize: 16,
+      color: theme.text,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: theme.outline,
+      marginVertical: spacing.sm,
+    },
+    button: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.surface,
+      padding: spacing.lg,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      marginBottom: spacing.md,
+    },
+    buttonText: {
+      ...typography.body,
+      fontSize: 16,
+      fontWeight: '600',
+      marginLeft: spacing.md,
+      flex: 1,
+      color: theme.text,
+    },
+    logoutButton: {
+      marginTop: spacing.lg,
+    },
+    logoutText: {
+      color: theme.error,
+    },
+  });
