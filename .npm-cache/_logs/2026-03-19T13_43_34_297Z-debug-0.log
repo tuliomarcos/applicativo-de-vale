@@ -1,0 +1,82 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.5.2
+2 info using node@v20.12.2
+3 timing npm:load:whichnode Completed in 3ms
+4 timing config:load:defaults Completed in 1ms
+5 timing config:load:file:C:\Users\DELL\AppData\Roaming\nvm\v20.12.2\node_modules\npm\npmrc Completed in 1ms
+6 timing config:load:builtin Completed in 1ms
+7 timing config:load:cli Completed in 2ms
+8 timing config:load:env Completed in 0ms
+9 timing config:load:file:C:\Users\DELL\Desktop\projects\aplicativo_de_vale_v2\nodejs_space\.npmrc Completed in 0ms
+10 timing config:load:project Completed in 2ms
+11 timing config:load:file:C:\Users\DELL\.npmrc Completed in 0ms
+12 timing config:load:user Completed in 0ms
+13 timing config:load:file:C:\Program Files\nodejs\etc\npmrc Completed in 0ms
+14 timing config:load:global Completed in 0ms
+15 timing config:load:setEnvs Completed in 1ms
+16 timing config:load Completed in 8ms
+17 timing npm:load:configload Completed in 8ms
+18 timing config:load:flatten Completed in 2ms
+19 timing npm:load:mkdirpcache Completed in 1ms
+20 timing npm:load:mkdirplogs Completed in 1ms
+21 verbose title npm install @prisma/client@6.7.0
+22 verbose argv "install" "@prisma/client@6.7.0" "--ignore-scripts" "false"
+23 timing npm:load:setTitle Completed in 0ms
+24 timing npm:load:display Completed in 1ms
+25 verbose logfile logs-max:10 dir:C:\Users\DELL\Desktop\projects\aplicativo_de_vale_v2\.npm-cache\_logs\2026-03-19T13_43_34_297Z-
+26 verbose logfile C:\Users\DELL\Desktop\projects\aplicativo_de_vale_v2\.npm-cache\_logs\2026-03-19T13_43_34_297Z-debug-0.log
+27 timing npm:load:logFile Completed in 4ms
+28 timing npm:load:timers Completed in 1ms
+29 timing npm:load:configScope Completed in 0ms
+30 timing npm:load Completed in 41ms
+31 timing arborist:ctor Completed in 0ms
+32 silly logfile done cleaning log files
+33 timing idealTree:init Completed in 740ms
+34 timing idealTree:userRequests Completed in 14ms
+35 silly idealTree buildDeps
+36 silly fetch manifest @prisma/client@6.7.0
+37 silly placeDep ROOT @prisma/client@ REPLACE for: nodejs_space@0.0.1 want: 6.7.0
+38 timing idealTree:#root Completed in 70083ms
+39 timing idealTree:node_modules/@prisma/client Completed in 0ms
+40 timing idealTree:buildDeps Completed in 70084ms
+41 timing idealTree:fixDepFlags Completed in 10ms
+42 timing idealTree Completed in 70849ms
+43 timing command:install Completed in 70930ms
+44 verbose type system
+45 verbose stack FetchError: request to https://registry.npmjs.org/@prisma%2fclient failed, reason: 
+45 verbose stack     at ClientRequest.<anonymous> (C:\Users\DELL\AppData\Roaming\nvm\v20.12.2\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+45 verbose stack     at ClientRequest.emit (node:events:518:28)
+45 verbose stack     at _destroy (node:_http_client:880:13)
+45 verbose stack     at onSocketNT (node:_http_client:900:5)
+45 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+46 verbose cwd C:\Users\DELL\Desktop\projects\aplicativo_de_vale_v2\nodejs_space
+47 verbose Windows_NT 10.0.26200
+48 verbose node v20.12.2
+49 verbose npm  v10.5.2
+50 error code EACCES
+51 error errno EACCES
+52 error FetchError: request to https://registry.npmjs.org/@prisma%2fclient failed, reason: 
+52 error     at ClientRequest.<anonymous> (C:\Users\DELL\AppData\Roaming\nvm\v20.12.2\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+52 error     at ClientRequest.emit (node:events:518:28)
+52 error     at _destroy (node:_http_client:880:13)
+52 error     at onSocketNT (node:_http_client:900:5)
+52 error     at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+52 error   code: 'EACCES',
+52 error   errno: 'EACCES',
+52 error   type: 'system',
+52 error   requiredBy: '.'
+52 error }
+53 error
+53 error The operation was rejected by your operating system.
+53 error It's possible that the file was already in use (by a text editor or antivirus),
+53 error or that you lack permissions to access it.
+53 error
+53 error If you believe this might be a permissions issue, please double-check the
+53 error permissions of the file and its containing directories, or try running
+53 error the command again as root/Administrator.
+54 verbose exit 1
+55 timing npm Completed in 71458ms
+56 verbose unfinished npm timer reify 1773927814819
+57 verbose unfinished npm timer reify:loadTrees 1773927814896
+58 verbose code 1
+59 error A complete log of this run can be found in: C:\Users\DELL\Desktop\projects\aplicativo_de_vale_v2\.npm-cache\_logs\2026-03-19T13_43_34_297Z-debug-0.log
