@@ -1,80 +1,53 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { theme, spacing, typography } from '../app/constants/theme';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { spacing, typography } from '../app/constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
-interface Props {
-  children: ReactNode;
-}
+type ErrorBoundaryState = { hasError: boolean; error?: Error };
 
-interface State {
-  hasError: boolean;
-  error?: Error;
-}
+export class ErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: undefined };
 
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
-      return (
-        <View style={styles.container}>
-          <Text style={styles.title}>Algo deu errado</Text>
-          <Text style={styles.message}>
-            {this.state.error?.message || 'Erro desconhecido'}
-          </Text>
-          <Pressable
-            style={styles.button}
-            onPress={() => this.setState({ hasError: false, error: undefined })}
-          >
-            <Text style={styles.buttonText}>Tentar novamente</Text>
-          </Pressable>
-        </View>
-      );
+      return <ThemedFallback error={this.state.error} />;
     }
-
     return this.props.children;
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    padding: spacing.xl,
-  },
-  title: {
-    ...typography.heading,
-    color: theme.colors.text,
-    marginBottom: spacing.md,
-  },
-  message: {
-    ...typography.body,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  button: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: 12,
-  },
-  buttonText: {
-    ...typography.body,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-});
+function ThemedFallback({ error }: { error?: Error }) {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Algo deu errado</Text>
+      <Text style={styles.message}>{error?.message ?? 'Tente novamente mais tarde.'}</Text>
+    </View>
+  );
+}
+
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.background,
+      padding: spacing.xl,
+    },
+    title: {
+      ...typography.heading,
+      color: theme.text,
+      marginBottom: spacing.sm,
+    },
+    message: {
+      ...typography.body,
+      color: theme.textSecondary,
+      textAlign: 'center',
+    },
+  });

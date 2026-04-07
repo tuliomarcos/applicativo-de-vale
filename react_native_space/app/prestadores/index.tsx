@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,11 +8,14 @@ import { api } from '../../services/api';
 import { Prestador } from '../../types';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import { EmptyState } from '../../components/EmptyState';
-import { theme, spacing, typography, borderRadius } from '../constants/theme';
-import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { spacing, typography, borderRadius } from '../constants/theme';
+import { showToast, getErrorMessage } from '../../utils/toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function PrestadoresScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -38,61 +41,79 @@ export default function PrestadoresScreen() {
     }
   };
 
-  if (loading && prestadores.length === 0) {
-    return <LoadingScreen />;
-  }
+  const filtered = prestadores.filter((p) => {
+    if (!search) return true;
+    return (
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.email.toLowerCase().includes(search.toLowerCase()) ||
+      p.document.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Prestadores</Text>
         </View>
 
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} />
+          <Ionicons name="search" size={20} color={theme.textSecondary} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar por nome, documento..."
-            placeholderTextColor={theme.colors.onSurfaceVariant}
+            placeholder="Buscar por nome ou documento"
+            placeholderTextColor={theme.textSecondary}
             value={search}
             onChangeText={setSearch}
           />
         </View>
 
-        <ScrollView style={styles.listContainer} contentContainerStyle={styles.listContent}>
-          {prestadores.length === 0 ? (
+        {loading ? (
+          <LoadingScreen />
+        ) : filtered.length === 0 ? (
+          <>
             <EmptyState
-              icon="briefcase-outline"
               title="Nenhum prestador encontrado"
-              description="Cadastre um novo prestador para começar"
+              description="Cadastre um prestador para começar."
             />
-          ) : (
-            prestadores.map((prestador) => (
-              <TouchableOpacity key={prestador.id} style={styles.prestadorCard}>
-                <View style={styles.prestadorHeader}>
-                  <View style={styles.prestadorIcon}>
-                    <Ionicons name="person" size={24} color={theme.colors.primary} />
+            <TouchableOpacity style={styles.emptyAction} onPress={() => router.push('/prestadores/cadastrar')}>
+              <Text style={styles.emptyActionText}>Cadastrar prestador</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <ScrollView contentContainerStyle={styles.listContent}>
+            {filtered.map((prestador) => (
+              <TouchableOpacity
+                key={prestador.id}
+                style={styles.card}
+                onPress={() => router.push(`/prestadores/${prestador.id}` as any)}
+              >
+                <View style={styles.cardHeader}>
+                  <View style={styles.iconCircle}>
+                    <Ionicons name="person" size={24} color={theme.primary} />
                   </View>
-                  <View style={styles.prestadorInfo}>
-                    <Text style={styles.prestadorName}>{prestador.name}</Text>
-                    <Text style={styles.prestadorDetail}>
-                      {prestador.documentType}: {prestador.document}
-                    </Text>
-                    <Text style={styles.prestadorDetail}>Telefone: {prestador.phone}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.cardTitle}>{prestador.name}</Text>
+                    <Text style={styles.cardSub}>{prestador.document}</Text>
+                    <Text style={styles.cardSub}>{prestador.email}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        )}
 
         <TouchableOpacity style={styles.fab} onPress={() => router.push('/prestadores/cadastrar')}>
-          <LinearGradient colors={['#F97316', '#F59E0B']} style={styles.fabGradient}>
-            <Ionicons name="add" size={28} color="#FFFFFF" />
+          <LinearGradient
+            colors={[theme.primary, theme.secondary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.fabGradient}
+          >
+            <Ionicons name="add" size={26} color="#000000" />
           </LinearGradient>
         </TouchableOpacity>
       </SafeAreaView>
@@ -100,78 +121,98 @@ export default function PrestadoresScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  backButton: { marginRight: spacing.md },
-  title: { ...typography.heading, fontSize: 24 },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surfaceVariant,
-    marginHorizontal: spacing.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.md,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: spacing.sm,
-    color: theme.colors.onSurface,
-    fontSize: 16,
-  },
-  listContainer: { flex: 1 },
-  listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
-  prestadorCard: {
-    backgroundColor: theme.colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-  },
-  prestadorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  prestadorIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  prestadorInfo: { flex: 1 },
-  prestadorName: { ...typography.body, fontSize: 16, fontWeight: '600', marginBottom: 4 },
-  prestadorDetail: { ...typography.caption, fontSize: 13, marginBottom: 2 },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.lg,
-    right: spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  fabGradient: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: { flex: 1 },
+    container: { flex: 1 },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    backButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.surface,
+      marginRight: spacing.md,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    title: { ...typography.display, fontSize: 26, color: theme.text, flex: 1 },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.surfaceVariant,
+      marginHorizontal: spacing.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.md,
+      marginBottom: spacing.md,
+    },
+    searchInput: {
+      flex: 1,
+      marginLeft: spacing.sm,
+      color: theme.text,
+    },
+    listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.md },
+    card: {
+      backgroundColor: theme.surface,
+      padding: spacing.lg,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    iconCircle: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: 'rgba(249, 115, 22, 0.1)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cardTitle: { ...typography.body, fontSize: 16, fontWeight: '600', color: theme.text },
+    cardSub: { ...typography.caption, color: theme.textSecondary },
+    fab: {
+      position: 'absolute',
+      bottom: spacing.lg + 60,
+      right: spacing.lg,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      overflow: 'hidden',
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+    fabGradient: {
+      width: '100%',
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyAction: {
+      marginTop: spacing.lg,
+      marginHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+      backgroundColor: theme.primary,
+    },
+    emptyActionText: {
+      ...typography.body,
+      fontWeight: '600',
+      color: '#000000',
+    },
+  });

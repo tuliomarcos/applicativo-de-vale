@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,11 +9,14 @@ import { ThemedTextInput } from '../../components/ThemedTextInput';
 import { GradientButton } from '../../components/GradientButton';
 import { api } from '../../services/api';
 import { Empresa } from '../../types';
-import { theme, spacing, typography, borderRadius, presetColors } from '../constants/theme';
+import { spacing, typography, borderRadius, presetColors } from '../constants/theme';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function CadastrarEmpresaScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [name, setName] = useState('');
   const [cnpj, setCnpj] = useState('');
@@ -41,16 +44,29 @@ export default function CadastrarEmpresaScreen() {
         setCnpj(data.cnpj);
         setAddress(data.address);
         setPhone(data.phone);
-        setPrimaryColor(data.primaryColor);
-        setSecondaryColor(data.secondaryColor);
-        if (data.logoUrl) {
-          setLogoUri(data.logoUrl);
-        }
+        setPrimaryColor(data.primaryColor || primaryColor);
+        setSecondaryColor(data.secondaryColor || secondaryColor);
+        if (data.logoUrl) setLogoUri(data.logoUrl);
       }
     } catch (error) {
-      console.error('Failed to load empresa:', error);
+      // Ignore if not found
     } finally {
       setInitialLoading(false);
+    }
+  };
+
+  const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets?.length) {
+      setLogoUri(result.assets[0].uri);
     }
   };
 
@@ -64,77 +80,26 @@ export default function CadastrarEmpresaScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets?.[0]) {
-        setLogoUri(result.assets[0].uri);
-      }
-    } catch (error) {
-      showToast.error('Não foi possível selecionar a imagem');
-    }
-  };
-
-  const uploadLogo = async (empresaId: string): Promise<string | null> => {
-    if (!logoUri || logoUri.startsWith('http')) return null;
-
-    try {
-      // Get file info
-      const filename = logoUri.split('/').pop() ?? 'logo.jpg';
-      const contentType = 'image/jpeg';
-
-      // Get presigned URL
-      const { uploadUrl, cloud_storage_path } = await api.getPresignedUrl(filename, contentType, true);
-
-      // Read file as blob
-      const fileResponse = await fetch(logoUri);
-      const blob = await fileResponse.blob();
-
-      // Upload to S3
-      await api.uploadFileToS3(uploadUrl, blob, contentType);
-
-      // Complete upload
-      const { url } = await api.completeUpload(cloud_storage_path, empresaId);
-      return url;
-    } catch (error) {
-      console.error('Failed to upload logo:', error);
-      return null;
-    }
-  };
-
-  const handleSubmit = async () => {
+  const handleSave = async () => {
     if (!validateForm()) return;
-
     setLoading(true);
     try {
-      const empresaData = {
+      const payload = {
         name,
         cnpj,
         address,
         phone,
         primaryColor: customPrimaryColor || primaryColor,
         secondaryColor: customSecondaryColor || secondaryColor,
+        logoUri,
       };
-
-      let result: Empresa;
-      if (empresa) {
-        result = await api.updateEmpresa(empresa.id, empresaData);
+      const isUpdate = Boolean(empresa?.id);
+      if (isUpdate && empresa?.id) {
+        await api.updateEmpresa(empresa.id, payload);
       } else {
-        result = await api.createEmpresa(empresaData);
+        await api.createEmpresa(payload);
       }
-
-      // Upload logo if selected
-      if (logoUri && !logoUri.startsWith('http')) {
-        await uploadLogo(result.id);
-      }
-
-      showToast.success(empresa ? successMessages.updateCompany : successMessages.createCompany);
+      showToast.success(isUpdate ? successMessages.updateCompany : successMessages.createCompany);
       router.back();
     } catch (error: unknown) {
       showToast.error(getErrorMessage(error));
@@ -143,72 +108,37 @@ export default function CadastrarEmpresaScreen() {
     }
   };
 
-  if (initialLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Carregando...</Text>
-      </View>
-    );
-  }
+  if (initialLoading) return <GradientButton title="Carregando..." disabled />;
 
   return (
-    <LinearGradient colors={['#0D0D0D', '#141418']} style={styles.gradient}>
+    <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.title}>{empresa ? 'Editar' : 'Cadastrar'} Empresa</Text>
-        </View>
-
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ThemedTextInput
-            label="Nome da Empresa"
-            value={name}
-            onChangeText={setName}
-            icon="business-outline"
-            error={errors.name}
-          />
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={theme.text} />
+            </TouchableOpacity>
+            <Text style={styles.title}>Minha Empresa</Text>
+          </View>
 
-          <ThemedTextInput
-            label="CNPJ"
-            value={cnpj}
-            onChangeText={setCnpj}
-            keyboardType="numeric"
-            icon="card-outline"
-            error={errors.cnpj}
-          />
+          <View style={styles.form}>
+            <ThemedTextInput label="Nome" value={name} onChangeText={setName} error={errors.name} />
+            <ThemedTextInput label="CNPJ" value={cnpj} onChangeText={setCnpj} error={errors.cnpj} />
+            <ThemedTextInput label="Endereço" value={address} onChangeText={setAddress} error={errors.address} />
+            <ThemedTextInput label="Telefone" value={phone} onChangeText={setPhone} error={errors.phone} />
 
-          <ThemedTextInput
-            label="Endereço"
-            value={address}
-            onChangeText={setAddress}
-            icon="location-outline"
-            error={errors.address}
-          />
-
-          <ThemedTextInput
-            label="Telefone"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            icon="call-outline"
-            error={errors.phone}
-          />
-
-          <View style={styles.section}>
             <Text style={styles.sectionLabel}>Cores da Empresa</Text>
-            
+
             <View style={styles.colorSection}>
               <Text style={styles.colorLabel}>Cor Primária</Text>
               <View style={styles.colorPalette}>
-                {presetColors.map((color: string) => (
+                {presetColors.map((color) => (
                   <TouchableOpacity
                     key={color}
                     style={[
                       styles.colorCircle,
                       { backgroundColor: color },
-                      primaryColor === color && styles.colorCircleSelected,
+                      (customPrimaryColor || primaryColor) === color && styles.colorCircleSelected,
                     ]}
                     onPress={() => {
                       setPrimaryColor(color);
@@ -220,7 +150,7 @@ export default function CadastrarEmpresaScreen() {
               <TextInput
                 style={styles.customColorInput}
                 placeholder="Ou digite uma cor hex (ex: #FF5733)"
-                placeholderTextColor={theme.colors.onSurfaceVariant}
+                placeholderTextColor={theme.textSecondary}
                 value={customPrimaryColor}
                 onChangeText={setCustomPrimaryColor}
                 autoCapitalize="characters"
@@ -230,13 +160,13 @@ export default function CadastrarEmpresaScreen() {
             <View style={styles.colorSection}>
               <Text style={styles.colorLabel}>Cor Secundária</Text>
               <View style={styles.colorPalette}>
-                {presetColors.map((color: string) => (
+                {presetColors.map((color) => (
                   <TouchableOpacity
                     key={color}
                     style={[
                       styles.colorCircle,
                       { backgroundColor: color },
-                      secondaryColor === color && styles.colorCircleSelected,
+                      (customSecondaryColor || secondaryColor) === color && styles.colorCircleSelected,
                     ]}
                     onPress={() => {
                       setSecondaryColor(color);
@@ -248,122 +178,120 @@ export default function CadastrarEmpresaScreen() {
               <TextInput
                 style={styles.customColorInput}
                 placeholder="Ou digite uma cor hex (ex: #33C3FF)"
-                placeholderTextColor={theme.colors.onSurfaceVariant}
+                placeholderTextColor={theme.textSecondary}
                 value={customSecondaryColor}
                 onChangeText={setCustomSecondaryColor}
                 autoCapitalize="characters"
               />
             </View>
-          </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Logo da Empresa</Text>
-            <TouchableOpacity style={styles.logoUpload} onPress={handlePickImage}>
+            <Text style={styles.sectionLabel}>Logo</Text>
+            <TouchableOpacity style={styles.logoPicker} onPress={pickImage}>
               {logoUri ? (
-                <Image source={{ uri: logoUri }} style={styles.logoImage} resizeMode="contain" />
+                <Image source={{ uri: logoUri }} style={styles.logo} />
               ) : (
-                <View style={styles.logoPlaceholder}>
-                  <Ionicons name="camera-outline" size={48} color={theme.colors.onSurfaceVariant} />
-                  <Text style={styles.logoPlaceholderText}>Toque para adicionar logo</Text>
-                </View>
+                <Ionicons name="camera-outline" size={48} color={theme.textSecondary} />
               )}
             </TouchableOpacity>
-          </View>
 
-          <GradientButton
-            title={empresa ? 'Atualizar Empresa' : 'Salvar Empresa'}
-            onPress={handleSubmit}
-            loading={loading}
-            style={styles.submitButton}
-          />
+            <GradientButton title="Salvar" onPress={handleSave} loading={loading} style={styles.saveButton} />
+          </View>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  container: { flex: 1 },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: { ...typography.body },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  backButton: { marginRight: spacing.md },
-  title: { ...typography.heading, fontSize: 24 },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  section: { marginBottom: spacing.lg },
-  sectionLabel: {
-    fontSize: 14,
-    color: theme.colors.onSurface,
-    marginBottom: spacing.md,
-    fontWeight: '500',
-  },
-  colorSection: { marginBottom: spacing.lg },
-  colorLabel: {
-    fontSize: 13,
-    color: theme.colors.onSurfaceVariant,
-    marginBottom: spacing.sm,
-    fontWeight: '500',
-  },
-  colorPalette: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  colorCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 3,
-    borderColor: 'transparent',
-  },
-  colorCircleSelected: {
-    borderColor: '#FFFFFF',
-  },
-  customColorInput: {
-    backgroundColor: theme.colors.surfaceVariant,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    color: theme.colors.onSurface,
-    fontSize: 16,
-  },
-  logoUpload: {
-    backgroundColor: theme.colors.surfaceVariant,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.outline,
-    borderStyle: 'dashed',
-  },
-  logoImage: {
-    width: '100%',
-    height: '100%',
-  },
-  logoPlaceholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoPlaceholderText: {
-    ...typography.caption,
-    marginTop: spacing.sm,
-  },
-  submitButton: { marginTop: spacing.lg },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    gradient: { flex: 1 },
+    container: { flex: 1 },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    backButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.surface,
+      marginRight: spacing.md,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    title: {
+      ...typography.display,
+      fontSize: 24,
+      color: theme.text,
+    },
+    form: {
+      backgroundColor: theme.surface,
+      padding: spacing.lg,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      gap: spacing.md,
+    },
+    sectionLabel: {
+      ...typography.heading,
+      fontSize: 16,
+      color: theme.text,
+      marginTop: spacing.md,
+    },
+    colorSection: {
+      marginTop: spacing.sm,
+      gap: spacing.sm,
+    },
+    colorLabel: {
+      ...typography.body,
+      color: theme.text,
+    },
+    colorPalette: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    colorCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    colorCircleSelected: {
+      borderColor: theme.primary,
+    },
+    customColorInput: {
+      backgroundColor: theme.surfaceVariant,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      color: theme.text,
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    logoPicker: {
+      marginTop: spacing.sm,
+      height: 140,
+      borderRadius: borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.outline,
+      backgroundColor: theme.surfaceVariant,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logo: {
+      width: '100%',
+      height: '100%',
+      borderRadius: borderRadius.lg,
+    },
+    saveButton: { marginTop: spacing.lg },
+  });

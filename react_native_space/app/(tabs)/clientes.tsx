@@ -9,8 +9,9 @@ import { Client } from '../../types';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import { EmptyState } from '../../components/EmptyState';
 import { spacing, typography, borderRadius } from '../constants/theme';
-import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { showToast, getErrorMessage } from '../../utils/toast';
 import { useTheme } from '../../contexts/ThemeContext';
+import { onlyDigits } from '../../utils/inputFormatters';
 
 export default function ClientesScreen() {
   const router = useRouter();
@@ -20,18 +21,10 @@ export default function ClientesScreen() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useFocusEffect(
-    useCallback(() => {
-      loadClientes();
-    }, [search])
-  );
-
-  const loadClientes = async () => {
+  const loadClientes = useCallback(async () => {
     try {
       setLoading(true);
-      const params: { search?: string } = {};
-      if (search) params.search = search;
-      const response = await api.getClients(params);
+      const response = await api.getClients();
       setClientes(response.items ?? []);
     } catch (error) {
       console.error('Failed to load clientes:', error);
@@ -39,14 +32,26 @@ export default function ClientesScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadClientes();
+    }, [loadClientes])
+  );
 
   const filteredClientes = clientes.filter((c) => {
-    if (!search) return true;
+    const searchTerm = search.trim().toLowerCase();
+    if (!searchTerm) return true;
+
+    const digitSearch = onlyDigits(searchTerm);
+
     return (
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.cnpj.toLowerCase().includes(search.toLowerCase())
+      c.name.toLowerCase().includes(searchTerm) ||
+      c.email.toLowerCase().includes(searchTerm) ||
+      c.cnpj.toLowerCase().includes(searchTerm) ||
+      (digitSearch.length > 0 && onlyDigits(c.cnpj).includes(digitSearch)) ||
+      (digitSearch.length > 0 && onlyDigits(c.phone).includes(digitSearch))
     );
   });
 
@@ -65,7 +70,7 @@ export default function ClientesScreen() {
             <Ionicons name="search" size={20} color={theme.textSecondary} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Buscar por nome ou CNPJ"
+              placeholder="Buscar por nome ou telefone"
               placeholderTextColor={theme.textSecondary}
               value={search}
               onChangeText={setSearch}

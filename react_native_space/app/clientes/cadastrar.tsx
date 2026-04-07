@@ -9,6 +9,7 @@ import { GradientButton } from '../../components/GradientButton';
 import { api } from '../../services/api';
 import { spacing, typography } from '../constants/theme';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { formatCnpj, formatPhone, isValidCnpj, isValidPhone, onlyDigits } from '../../utils/inputFormatters';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function CadastrarClienteScreen() {
@@ -25,15 +26,29 @@ export default function CadastrarClienteScreen() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!name) newErrors.name = 'Nome é obrigatório';
-    if (!cnpj) newErrors.cnpj = 'CNPJ é obrigatório';
-    if (!address) newErrors.address = 'Endereço é obrigatório';
-    if (!phone) newErrors.phone = 'Telefone é obrigatório';
-    if (!email) {
-      newErrors.email = 'Email é obrigatório';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email inválido';
+
+    if (!name.trim()) newErrors.name = 'Nome obrigatorio';
+
+    if (!cnpj.trim()) {
+      newErrors.cnpj = 'CNPJ obrigatorio';
+    } else if (!isValidCnpj(cnpj)) {
+      newErrors.cnpj = 'CNPJ invalido';
     }
+
+    if (!address.trim()) newErrors.address = 'Endereco obrigatorio';
+
+    if (!phone.trim()) {
+      newErrors.phone = 'Telefone obrigatorio';
+    } else if (!isValidPhone(phone)) {
+      newErrors.phone = 'Telefone invalido';
+    }
+
+    if (!email.trim()) {
+      newErrors.email = 'Email obrigatorio';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email invalido';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -44,11 +59,11 @@ export default function CadastrarClienteScreen() {
     setLoading(true);
     try {
       await api.createClient({
-        name,
-        cnpj,
-        address,
-        phone,
-        email,
+        name: name.trim(),
+        cnpj: onlyDigits(cnpj),
+        address: address.trim(),
+        phone: onlyDigits(phone),
+        email: email.trim(),
       });
       showToast.success(successMessages.createClient);
       router.back();
@@ -81,13 +96,13 @@ export default function CadastrarClienteScreen() {
             <ThemedTextInput
               label="CNPJ"
               value={cnpj}
-              onChangeText={setCnpj}
+              onChangeText={(value) => setCnpj(formatCnpj(value))}
               keyboardType="numeric"
               icon="card-outline"
               error={errors.cnpj}
             />
             <ThemedTextInput
-              label="Endereço"
+              label="Endereco"
               value={address}
               onChangeText={setAddress}
               icon="location-outline"
@@ -96,7 +111,7 @@ export default function CadastrarClienteScreen() {
             <ThemedTextInput
               label="Telefone"
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(value) => setPhone(formatPhone(value))}
               keyboardType="phone-pad"
               icon="call-outline"
               error={errors.phone}
