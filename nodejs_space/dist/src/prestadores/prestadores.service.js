@@ -16,19 +16,80 @@ const prisma_service_1 = require("../database/prisma.service");
 let PrestadoresService = PrestadoresService_1 = class PrestadoresService {
     prisma;
     logger = new common_1.Logger(PrestadoresService_1.name);
+    toResponse(prestador) {
+        return {
+            id: prestador.id,
+            createdById: prestador.createdById,
+            name: prestador.name,
+            cpf: prestador.document,
+            vehiclePlate: prestador.vehiclePlate,
+            documentType: prestador.documentType,
+            address: prestador.address,
+            phone: prestador.phone,
+            email: prestador.email,
+            createdAt: prestador.createdAt,
+            updatedAt: prestador.updatedAt,
+        };
+    }
     constructor(prisma) {
         this.prisma = prisma;
+    }
+    async syncPrestadoresFromSignupUsers() {
+        const users = await this.prisma.user.findMany({
+            where: { role: 'PRESTADOR' },
+            select: {
+                id: true,
+                name: true,
+                phone: true,
+                email: true,
+            },
+        });
+        for (const user of users) {
+            const existing = await this.prisma.prestador.findFirst({
+                where: {
+                    OR: [
+                        { email: user.email },
+                        {
+                            AND: [
+                                { name: user.name },
+                                { phone: user.phone },
+                            ],
+                        },
+                    ],
+                },
+            });
+            if (!existing) {
+                await this.prisma.prestador.create({
+                    data: {
+                        createdById: user.id,
+                        name: user.name,
+                        document: '',
+                        vehiclePlate: '',
+                        documentType: 'CPF',
+                        address: '',
+                        phone: user.phone,
+                        email: user.email,
+                    },
+                });
+            }
+        }
     }
     async create(userId, createPrestadorDto) {
         try {
             const prestador = await this.prisma.prestador.create({
                 data: {
-                    ...createPrestadorDto,
+                    name: createPrestadorDto.name,
+                    document: createPrestadorDto.cpf ?? '',
+                    vehiclePlate: createPrestadorDto.vehiclePlate,
+                    documentType: 'CPF',
+                    address: createPrestadorDto.address ?? '',
+                    phone: createPrestadorDto.phone,
+                    email: createPrestadorDto.email ?? '',
                     createdById: userId,
                 },
             });
             this.logger.log(`Prestador created: ${prestador.id}`);
-            return prestador;
+            return this.toResponse(prestador);
         }
         catch (error) {
             this.logger.error(`Error creating prestador: ${error.message}`);
@@ -37,12 +98,15 @@ let PrestadoresService = PrestadoresService_1 = class PrestadoresService {
     }
     async findAll(search, page = 1, limit = 10) {
         try {
+            await this.syncPrestadoresFromSignupUsers();
             const skip = (page - 1) * limit;
             const where = search
                 ? {
                     OR: [
                         { name: { contains: search, mode: 'insensitive' } },
                         { document: { contains: search, mode: 'insensitive' } },
+                        { vehiclePlate: { contains: search, mode: 'insensitive' } },
+                        { phone: { contains: search, mode: 'insensitive' } },
                         { email: { contains: search, mode: 'insensitive' } },
                     ],
                 }
@@ -57,7 +121,7 @@ let PrestadoresService = PrestadoresService_1 = class PrestadoresService {
                 this.prisma.prestador.count({ where }),
             ]);
             return {
-                items,
+                items: items.map((item) => this.toResponse(item)),
                 total,
                 page,
                 totalPages: Math.ceil(total / limit),
@@ -76,7 +140,7 @@ let PrestadoresService = PrestadoresService_1 = class PrestadoresService {
             if (!prestador) {
                 throw new common_1.NotFoundException('Prestador not found');
             }
-            return prestador;
+            return this.toResponse(prestador);
         }
         catch (error) {
             this.logger.error(`Error fetching prestador: ${error.message}`);
@@ -85,12 +149,23 @@ let PrestadoresService = PrestadoresService_1 = class PrestadoresService {
     }
     async update(id, updatePrestadorDto) {
         try {
+            const existing = await this.prisma.prestador.findUnique({ where: { id } });
+            if (!existing) {
+                throw new common_1.NotFoundException('Prestador not found');
+            }
             const prestador = await this.prisma.prestador.update({
                 where: { id },
-                data: updatePrestadorDto,
+                data: {
+                    name: updatePrestadorDto.name,
+                    document: updatePrestadorDto.cpf,
+                    vehiclePlate: updatePrestadorDto.vehiclePlate,
+                    address: updatePrestadorDto.address,
+                    phone: updatePrestadorDto.phone,
+                    email: updatePrestadorDto.email,
+                },
             });
             this.logger.log(`Prestador updated: ${id}`);
-            return prestador;
+            return this.toResponse(prestador);
         }
         catch (error) {
             this.logger.error(`Error updating prestador: ${error.message}`);
@@ -99,6 +174,10 @@ let PrestadoresService = PrestadoresService_1 = class PrestadoresService {
     }
     async delete(id) {
         try {
+            const existing = await this.prisma.prestador.findUnique({ where: { id } });
+            if (!existing) {
+                throw new common_1.NotFoundException('Prestador not found');
+            }
             await this.prisma.prestador.delete({ where: { id } });
             this.logger.log(`Prestador deleted: ${id}`);
             return { success: true };

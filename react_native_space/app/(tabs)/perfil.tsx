@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { ThemeToggle } from '../../components/ThemeToggle';
 import { spacing, typography, borderRadius } from '../constants/theme';
 import { UserRole } from '../../types';
 import { useTheme } from '../../contexts/ThemeContext';
+import { showToast, getErrorMessage } from '../../utils/toast';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -16,7 +17,25 @@ export default function PerfilScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const doLogout = async () => {
+    try {
+      await logout();
+    } catch (error: unknown) {
+      showToast.error(getErrorMessage(error));
+    }
+  };
+
   const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      const confirmed = typeof globalThis.confirm === 'function'
+        ? globalThis.confirm('Tem certeza que deseja sair?')
+        : true;
+      if (confirmed) {
+        doLogout();
+      }
+      return;
+    }
+
     Alert.alert(
       'Sair',
       'Tem certeza que deseja sair?',
@@ -25,9 +44,7 @@ export default function PerfilScreen() {
         {
           text: 'Sair',
           style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
+          onPress: doLogout,
         },
       ]
     );

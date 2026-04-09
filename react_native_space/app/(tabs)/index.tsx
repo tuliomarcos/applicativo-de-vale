@@ -22,7 +22,8 @@ const actionCards: ActionCard[] = [
   { title: 'Criar Vale Diária', icon: 'time-outline', route: '/vales/criar-diaria', roles: ['EMPRESA', 'PRESTADOR'] },
   { title: 'Lista de Vales', icon: 'document-text-outline', route: '/(tabs)/vales', roles: ['EMPRESA', 'PRESTADOR', 'CLIENTE'] },
   { title: 'Clientes', icon: 'people-outline', route: '/(tabs)/clientes', roles: ['EMPRESA', 'PRESTADOR'] },
-  { title: 'Prestadores', icon: 'briefcase-outline', route: '/prestadores', roles: ['EMPRESA'] },
+  { title: 'Prestadores', icon: 'briefcase-outline', route: '/prestadores', roles: ['EMPRESA', 'PRESTADOR'] },
+  { title: 'Cadastrar Prestador', icon: 'person-add-outline', route: '/prestadores/cadastrar', roles: ['EMPRESA', 'PRESTADOR'] },
   { title: 'Minha Empresa', icon: 'business-outline', route: '/empresa/cadastrar', roles: ['EMPRESA'] },
 ];
 

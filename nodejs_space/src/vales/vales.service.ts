@@ -72,7 +72,7 @@ export class ValesService {
           createdById: userId,
           clientId: createDto.clientId,
           workLocation: createDto.workLocation,
-          date: new Date(createDto.date),
+          date: createDto.date ? new Date(createDto.date) : new Date(),
           signaturePath,
           truckPlate: createDto.truckPlate,
           driverName: createDto.driverName,
@@ -115,7 +115,7 @@ export class ValesService {
           createdById: userId,
           clientId: createDto.clientId,
           workLocation: createDto.workLocation,
-          date: new Date(createDto.date),
+          date: createDto.date ? new Date(createDto.date) : new Date(),
           signaturePath,
           operatorName: createDto.operatorName,
           morningStart: createDto.morningStart,
@@ -292,9 +292,13 @@ export class ValesService {
 
   private async uploadSignature(
     userId: string,
-    signatureBase64: string,
+    signatureBase64?: string,
   ): Promise<string> {
     try {
+      if (!signatureBase64?.trim()) {
+        return '';
+      }
+
       // Decode base64 and upload to S3
       const fileName = `signature-${Date.now()}.png`;
       const { uploadUrl, cloud_storage_path } =
@@ -342,7 +346,9 @@ export class ValesService {
   async formatValeResponse(
     vale: ValeWithClientSummary | ValeWithClientDetail,
   ): Promise<ValeResponse> {
-    const signatureUrl = await s3.getFileUrl(vale.signaturePath, false);
+    const signatureUrl = vale.signaturePath
+      ? await s3.getFileUrl(vale.signaturePath, false)
+      : '';
 
     return {
       id: vale.id,

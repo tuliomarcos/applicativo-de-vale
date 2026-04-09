@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ValesModule = void 0;
 const common_1 = require("@nestjs/common");
 const vales_controller_1 = require("./vales.controller");
+const vales_public_controller_1 = require("./vales-public.controller");
 const vales_service_1 = require("./vales.service");
 const pdf_service_1 = require("./pdf.service");
 const email_service_1 = require("./email.service");
@@ -19,7 +20,7 @@ exports.ValesModule = ValesModule;
 exports.ValesModule = ValesModule = __decorate([
     (0, common_1.Module)({
         imports: [empresa_module_1.EmpresaModule],
-        controllers: [vales_controller_1.ValesController],
+        controllers: [vales_controller_1.ValesController, vales_public_controller_1.ValesPublicController],
         providers: [vales_service_1.ValesService, pdf_service_1.PdfService, email_service_1.EmailService],
         exports: [vales_service_1.ValesService],
     })

@@ -59,13 +59,13 @@ __decorate([
 ], CreateValeViagemDto.prototype, "workLocation", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '2026-03-11T10:00:00.000Z' }),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateValeViagemDto.prototype, "date", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...' }),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, swagger_1.ApiProperty)({ example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...', required: false }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateValeViagemDto.prototype, "signatureData", void 0);
@@ -103,7 +103,7 @@ __decorate([
 ], CreateValeDiariaDto.prototype, "workLocation", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '2026-03-11T10:00:00.000Z' }),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateValeDiariaDto.prototype, "date", void 0);
@@ -144,8 +144,8 @@ __decorate([
     __metadata("design:type", String)
 ], CreateValeDiariaDto.prototype, "equipment", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...' }),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, swagger_1.ApiProperty)({ example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...', required: false }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateValeDiariaDto.prototype, "signatureData", void 0);

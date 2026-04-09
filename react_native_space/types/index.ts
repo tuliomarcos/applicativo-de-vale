@@ -29,11 +29,11 @@ export interface Prestador {
   id: string;
   createdById: string;
   name: string;
-  document: string;
-  documentType: 'CPF' | 'CNPJ';
-  address: string;
+  cpf: string;
+  vehiclePlate: string;
   phone: string;
-  email: string;
+  address?: string;
+  email?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -134,11 +134,11 @@ export interface CreateClientPayload {
 
 export interface CreatePrestadorPayload {
   name: string;
-  document: string;
-  documentType: 'CPF' | 'CNPJ';
-  address: string;
+  cpf?: string;
+  vehiclePlate: string;
   phone: string;
-  email: string;
+  address?: string;
+  email?: string;
 }
 
 export interface CreateEmpresaPayload {
@@ -156,22 +156,22 @@ export interface CreateValeViagemPayload {
   driverName: string;
   tripType: TripType;
   workLocation: string;
-  date: string;
-  signatureData: string;
+  date?: string;
+  signatureData?: string;
 }
 
 export interface CreateValeDiariaPayload {
   clientId: string;
   operatorName: string;
   workLocation: string;
-  date: string;
+  date?: string;
   morningStart: string;
   morningEnd: string;
   afternoonStart: string;
   afternoonEnd: string;
   totalHours: number;
   equipment: string;
-  signatureData: string;
+  signatureData?: string;
 }
 
 export interface UpdateValePayload {

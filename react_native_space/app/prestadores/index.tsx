@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { spacing, typography, borderRadius } from '../constants/theme';
 import { showToast, getErrorMessage } from '../../utils/toast';
 import { useTheme } from '../../contexts/ThemeContext';
+import { onlyDigits } from '../../utils/inputFormatters';
 
 export default function PrestadoresScreen() {
   const router = useRouter();
@@ -20,18 +21,10 @@ export default function PrestadoresScreen() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useFocusEffect(
-    useCallback(() => {
-      loadPrestadores();
-    }, [search])
-  );
-
-  const loadPrestadores = async () => {
+  const loadPrestadores = useCallback(async () => {
     try {
       setLoading(true);
-      const params: { search?: string } = {};
-      if (search) params.search = search;
-      const response = await api.getPrestadores(params);
+      const response = await api.getPrestadores();
       setPrestadores(response.items ?? []);
     } catch (error) {
       console.error('Failed to load prestadores:', error);
@@ -39,14 +32,25 @@ export default function PrestadoresScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadPrestadores();
+    }, [loadPrestadores])
+  );
 
   const filtered = prestadores.filter((p) => {
-    if (!search) return true;
+    const term = search.trim().toLowerCase();
+    if (!term) return true;
+
+    const digitSearch = onlyDigits(term);
+
     return (
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.email.toLowerCase().includes(search.toLowerCase()) ||
-      p.document.toLowerCase().includes(search.toLowerCase())
+      p.name.toLowerCase().includes(term) ||
+      p.cpf.toLowerCase().includes(term) ||
+      p.vehiclePlate.toLowerCase().includes(term) ||
+      (digitSearch.length > 0 && onlyDigits(p.phone).includes(digitSearch))
     );
   });
 
@@ -64,7 +68,7 @@ export default function PrestadoresScreen() {
           <Ionicons name="search" size={20} color={theme.textSecondary} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar por nome ou documento"
+            placeholder="Buscar por nome, CPF, placa ou telefone"
             placeholderTextColor={theme.textSecondary}
             value={search}
             onChangeText={setSearch}
@@ -77,7 +81,7 @@ export default function PrestadoresScreen() {
           <>
             <EmptyState
               title="Nenhum prestador encontrado"
-              description="Cadastre um prestador para começar."
+              description="Cadastre um prestador para comecar."
             />
             <TouchableOpacity style={styles.emptyAction} onPress={() => router.push('/prestadores/cadastrar')}>
               <Text style={styles.emptyActionText}>Cadastrar prestador</Text>
@@ -86,19 +90,16 @@ export default function PrestadoresScreen() {
         ) : (
           <ScrollView contentContainerStyle={styles.listContent}>
             {filtered.map((prestador) => (
-              <TouchableOpacity
-                key={prestador.id}
-                style={styles.card}
-                onPress={() => router.push(`/prestadores/${prestador.id}` as any)}
-              >
+              <TouchableOpacity key={prestador.id} style={styles.card} onPress={() => router.push(`/prestadores/${prestador.id}` as any)}>
                 <View style={styles.cardHeader}>
                   <View style={styles.iconCircle}>
                     <Ionicons name="person" size={24} color={theme.primary} />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={styles.cardInfo}>
                     <Text style={styles.cardTitle}>{prestador.name}</Text>
-                    <Text style={styles.cardSub}>{prestador.document}</Text>
-                    <Text style={styles.cardSub}>{prestador.email}</Text>
+                    <Text style={styles.cardSub}>CPF: {prestador.cpf}</Text>
+                    <Text style={styles.cardSub}>Telefone: {prestador.phone}</Text>
+                    <Text style={styles.cardSub}>Placa: {prestador.vehiclePlate}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -172,6 +173,7 @@ const createStyles = (theme: any) =>
       alignItems: 'center',
       gap: spacing.md,
     },
+    cardInfo: { flex: 1 },
     iconCircle: {
       width: 48,
       height: 48,

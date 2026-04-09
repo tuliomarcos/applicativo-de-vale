@@ -10,4 +10,6 @@ export declare class PdfService {
     constructor(prisma: PrismaService, valesService: ValesService, empresaService: EmpresaService);
     generatePdf(userId: string, valeIds: string[]): Promise<PdfResponse>;
     private createPdfBuffer;
+    private resolvePdfHeaderProfile;
+    private uploadPdfAndGetUrl;
 }

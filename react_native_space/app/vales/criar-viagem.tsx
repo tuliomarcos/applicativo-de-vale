@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Linking } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -8,12 +8,14 @@ import { ThemedTextInput } from '../../components/ThemedTextInput';
 import { GradientButton } from '../../components/GradientButton';
 import { SignaturePad } from '../../components/SignaturePad';
 import { ClientPicker } from '../../components/ClientPicker';
+import { PrestadorPicker } from '../../components/PrestadorPicker';
 import { api } from '../../services/api';
-import { Client, TripType } from '../../types';
+import { Client, Prestador, TripType } from '../../types';
 import { spacing, typography, borderRadius } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
 import { useTheme } from '../../contexts/ThemeContext';
+import { formatTruckPlate, normalizeTruckPlate } from '../../utils/inputFormatters';
 
 export default function CriarViagemScreen() {
   const router = useRouter();
@@ -29,14 +31,45 @@ export default function CriarViagemScreen() {
   const [signatureData, setSignatureData] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [clients, setClients] = useState<Client[]>([]);
+  const [prestadores, setPrestadores] = useState<Prestador[]>([]);
+  const [prestador, setPrestador] = useState<Prestador | null>(null);
+
+  const loadClients = React.useCallback(async () => {
+    try {
+      const response = await api.getClients();
+      setClients(response.items ?? []);
+    } catch (error: unknown) {
+      showToast.error(getErrorMessage(error));
+    }
+  }, []);
+
+  const loadPrestadores = React.useCallback(async () => {
+    try {
+      const response = await api.getPrestadores();
+      setPrestadores(response.items ?? []);
+    } catch (error: unknown) {
+      showToast.error(getErrorMessage(error));
+    }
+  }, []);
+
+  useEffect(() => {
+    loadClients();
+    loadPrestadores();
+  }, [loadClients, loadPrestadores]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPrestadores();
+    }, [loadPrestadores])
+  );
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!client) newErrors.client = 'Cliente é obrigatório';
-    if (!truckPlate) newErrors.truckPlate = 'Placa do caminhão é obrigatória';
-    if (!driverName) newErrors.driverName = 'Nome do motorista é obrigatório';
-    if (!workLocation) newErrors.workLocation = 'Local da obra é obrigatório';
-    if (!signatureData) newErrors.signature = 'Assinatura é obrigatória';
+    if (!client) newErrors.client = 'Cliente obrigatorio';
+    if (!truckPlate) newErrors.truckPlate = 'Placa do caminhao obrigatoria';
+    if (!driverName) newErrors.driverName = 'Nome do motorista obrigatorio';
+    if (!workLocation) newErrors.workLocation = 'Local da obra obrigatorio';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -48,13 +81,33 @@ export default function CriarViagemScreen() {
     try {
       await api.createValeViagem({
         clientId: client!.id,
-        truckPlate: truckPlate.toUpperCase(),
+        truckPlate: normalizeTruckPlate(truckPlate),
         driverName,
         tripType,
         workLocation,
-        date: date.toISOString(),
-        signatureData,
+        ...(date ? { date: date.toISOString() } : {}),
+        ...(signatureData ? { signatureData } : {}),
       });
+
+      if (prestador?.phone) {
+        try {
+          const phone = `55${prestador.phone.replace(/\D/g, '')}`;
+          const message = [
+            'Novo vale viagem criado para voce.',
+            `Cliente: ${client?.name ?? '-'}`,
+            `Motorista: ${driverName}`,
+            `Placa: ${truckPlate}`,
+            `Tipo: ${tripType}`,
+            `Local: ${workLocation}`,
+            `Data: ${formatDate(date)}`,
+          ].join('\n');
+          const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+          await Linking.openURL(whatsappUrl);
+        } catch (whatsError: unknown) {
+          showToast.error('Vale criado, mas nao foi possivel abrir o WhatsApp');
+        }
+      }
+
       showToast.success(successMessages.createVoucher);
       router.back();
     } catch (error: unknown) {
@@ -64,9 +117,7 @@ export default function CriarViagemScreen() {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR');
-  };
+  const formatDate = (value: Date) => value.toLocaleDateString('pt-BR');
 
   return (
     <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
@@ -79,12 +130,28 @@ export default function CriarViagemScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ClientPicker value={client} onChange={(c) => setClient(c)} error={errors.client} />
+          <ClientPicker clients={clients} value={client} onChange={(c) => setClient(c)} error={errors.client} />
+          <PrestadorPicker
+            prestadores={prestadores}
+            value={prestador}
+            onChange={(selected) => {
+              setPrestador(selected);
+              if (selected) {
+                setDriverName(selected.name);
+                setTruckPlate(formatTruckPlate(selected.vehiclePlate));
+              }
+            }}
+            label="Prestador (motorista)"
+          />
+          <TouchableOpacity onPress={() => router.push('/prestadores/cadastrar')} style={styles.newPrestadorButton}>
+            <Ionicons name="person-add-outline" size={18} color={theme.primary} />
+            <Text style={styles.newPrestadorText}>Cadastrar prestador</Text>
+          </TouchableOpacity>
 
           <ThemedTextInput
-            label="Placa do Caminhão"
+            label="Placa do Caminhao"
             value={truckPlate}
-            onChangeText={(text: string) => setTruckPlate(text.toUpperCase())}
+            onChangeText={(text: string) => setTruckPlate(formatTruckPlate(text))}
             autoCapitalize="characters"
             icon="car-outline"
             error={errors.truckPlate}
@@ -105,17 +172,13 @@ export default function CriarViagemScreen() {
                 style={[styles.tripTypeButton, tripType === 'ENTULHO' && styles.tripTypeButtonActive]}
                 onPress={() => setTripType('ENTULHO')}
               >
-                <Text style={[styles.tripTypeText, tripType === 'ENTULHO' && styles.tripTypeTextActive]}>
-                  Entulho
-                </Text>
+                <Text style={[styles.tripTypeText, tripType === 'ENTULHO' && styles.tripTypeTextActive]}>Entulho</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.tripTypeButton, tripType === 'TERRA' && styles.tripTypeButtonActive]}
                 onPress={() => setTripType('TERRA')}
               >
-                <Text style={[styles.tripTypeText, tripType === 'TERRA' && styles.tripTypeTextActive]}>
-                  Terra
-                </Text>
+                <Text style={[styles.tripTypeText, tripType === 'TERRA' && styles.tripTypeTextActive]}>Terra</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -129,7 +192,7 @@ export default function CriarViagemScreen() {
           />
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Data</Text>
+            <Text style={styles.sectionLabel}>Data (opcional)</Text>
             <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
               <Ionicons name="calendar-outline" size={20} color={theme.textSecondary} />
               <Text style={styles.dateText}>{formatDate(date)}</Text>
@@ -151,7 +214,6 @@ export default function CriarViagemScreen() {
           )}
 
           <SignaturePad onSave={setSignatureData} />
-          {errors.signature && <Text style={styles.errorText}>{errors.signature}</Text>}
 
           <GradientButton title="Salvar Vale" onPress={handleSubmit} loading={loading} style={styles.submitButton} />
         </ScrollView>
@@ -212,11 +274,24 @@ const createStyles = (theme: any) =>
       borderRadius: borderRadius.md,
     },
     dateText: { ...typography.body, marginLeft: spacing.sm, color: theme.text },
-    errorText: {
-      fontSize: 12,
-      color: theme.error,
-      marginTop: -spacing.sm,
+    newPrestadorButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      marginTop: -spacing.xs,
       marginBottom: spacing.md,
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.md,
+      backgroundColor: 'rgba(249, 115, 22, 0.12)',
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    newPrestadorText: {
+      ...typography.caption,
+      color: theme.primary,
+      fontWeight: '600',
     },
     submitButton: { marginTop: spacing.lg },
   });

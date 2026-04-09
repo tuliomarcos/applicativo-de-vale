@@ -44,6 +44,8 @@ const empresa_service_1 = require("../empresa/empresa.service");
 const pdfkit_1 = __importDefault(require("pdfkit"));
 const s3 = __importStar(require("../lib/s3"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
+const promises_1 = require("node:fs/promises");
+const node_path_1 = require("node:path");
 let PdfService = PdfService_1 = class PdfService {
     prisma;
     valesService;
@@ -56,16 +58,115 @@ let PdfService = PdfService_1 = class PdfService {
     }
     async generatePdf(userId, valeIds) {
         try {
-            const empresa = await this.empresaService.getByUserId(userId);
-            if (!empresa) {
-                throw new common_1.BadRequestException('User does not have an empresa profile');
-            }
+            const profile = await this.resolvePdfHeaderProfile(userId);
             const vales = await this.valesService.getValesByIds(valeIds);
             if (vales.length === 0) {
                 throw new common_1.BadRequestException('No vales found');
             }
-            const pdfBuffer = await this.createPdfBuffer(empresa, vales);
+            const pdfBuffer = await this.createPdfBuffer(profile, vales);
             const fileName = `vales-${Date.now()}.pdf`;
+            const pdfUrl = await this.uploadPdfAndGetUrl(userId, fileName, pdfBuffer);
+            this.logger.log(`PDF generated for ${valeIds.length} vales`);
+            return { pdfUrl };
+        }
+        catch (error) {
+            this.logger.error(`Error generating PDF: ${error.message}`);
+            throw error;
+        }
+    }
+    async createPdfBuffer(profile, vales) {
+        return new Promise((resolve, reject) => {
+            try {
+                const doc = new pdfkit_1.default({ margin: 50 });
+                const chunks = [];
+                doc.on('data', (chunk) => chunks.push(chunk));
+                doc.on('end', () => resolve(Buffer.concat(chunks)));
+                doc.on('error', reject);
+                doc
+                    .fontSize(20)
+                    .fillColor(profile.primaryColor || '#000000')
+                    .text(profile.name, { align: 'center' });
+                doc
+                    .fontSize(10)
+                    .fillColor('#000000')
+                    .text(`CNPJ/CPF: ${profile.cnpj || 'Nao informado'}`, {
+                    align: 'center',
+                })
+                    .text(`Endereco: ${profile.address || 'Nao informado'}`, {
+                    align: 'center',
+                })
+                    .text(`Telefone: ${profile.phone || 'Nao informado'}`, {
+                    align: 'center',
+                })
+                    .moveDown(2);
+                vales.forEach((vale, index) => {
+                    if (index > 0) {
+                        doc.addPage();
+                    }
+                    doc
+                        .fontSize(16)
+                        .fillColor(profile.secondaryColor || '#000000')
+                        .text(vale.type === 'VIAGEM' ? 'VALE DE VIAGEM' : 'VALE DE DIARIA', { align: 'center' })
+                        .moveDown();
+                    doc.fontSize(12).fillColor('#000000');
+                    doc.text(`Cliente: ${vale.client.name}`);
+                    doc.text(`CNPJ Cliente: ${vale.client.cnpj}`);
+                    doc.text(`Local de Trabalho: ${vale.workLocation}`);
+                    doc.text(`Data: ${new Date(vale.date).toLocaleDateString('pt-BR')}`);
+                    doc.moveDown();
+                    if (vale.type === 'VIAGEM') {
+                        doc.text(`Placa do Caminhao: ${vale.truckPlate}`);
+                        doc.text(`Nome do Motorista: ${vale.driverName}`);
+                        doc.text(`Tipo de Viagem: ${vale.tripType}`);
+                    }
+                    else {
+                        doc.text(`Nome do Operador: ${vale.operatorName}`);
+                        doc.text(`Equipamento: ${vale.equipment}`);
+                        doc.text(`Horario Manha: ${vale.morningStart} - ${vale.morningEnd}`);
+                        doc.text(`Horario Tarde: ${vale.afternoonStart} - ${vale.afternoonEnd}`);
+                        doc.text(`Total de Horas: ${vale.totalHours}h`);
+                    }
+                    doc.moveDown();
+                    doc.text('Assinatura:', { continued: false });
+                    doc.text('_________________________________');
+                });
+                doc.end();
+            }
+            catch (error) {
+                reject(error);
+            }
+        });
+    }
+    async resolvePdfHeaderProfile(userId) {
+        const empresa = await this.empresaService.getByUserId(userId);
+        if (empresa) {
+            return {
+                name: empresa.name,
+                cnpj: empresa.cnpj,
+                address: empresa.address,
+                phone: empresa.phone,
+                primaryColor: empresa.primaryColor,
+                secondaryColor: empresa.secondaryColor,
+            };
+        }
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true, phone: true },
+        });
+        if (!user) {
+            throw new common_1.BadRequestException('User not found');
+        }
+        return {
+            name: user.name || 'Vale de Servico',
+            cnpj: '',
+            address: '',
+            phone: user.phone || '',
+            primaryColor: '#000000',
+            secondaryColor: '#000000',
+        };
+    }
+    async uploadPdfAndGetUrl(userId, fileName, pdfBuffer) {
+        try {
             const { uploadUrl, cloud_storage_path } = await s3.generatePresignedUploadUrl(fileName, 'application/pdf', true);
             const uploadResponse = await (0, node_fetch_1.default)(uploadUrl, {
                 method: 'PUT',
@@ -87,73 +188,17 @@ let PdfService = PdfService_1 = class PdfService {
                     contentType: 'application/pdf',
                 },
             });
-            const pdfUrl = await s3.getFileUrl(cloud_storage_path, true);
-            this.logger.log(`PDF generated for ${valeIds.length} vales`);
-            return { pdfUrl };
+            return await s3.getFileUrl(cloud_storage_path, true);
         }
         catch (error) {
-            this.logger.error(`Error generating PDF: ${error.message}`);
-            throw error;
+            const localDir = (0, node_path_1.join)(process.cwd(), 'uploads', 'pdfs');
+            await (0, promises_1.mkdir)(localDir, { recursive: true });
+            const localPath = (0, node_path_1.join)(localDir, fileName);
+            await (0, promises_1.writeFile)(localPath, pdfBuffer);
+            this.logger.warn(`S3 upload failed, using local PDF fallback: ${error.message}`);
+            const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:2026';
+            return `${appBaseUrl}/api/vales/local-pdf/${fileName}`;
         }
-    }
-    async createPdfBuffer(empresa, vales) {
-        return new Promise((resolve, reject) => {
-            try {
-                const doc = new pdfkit_1.default({ margin: 50 });
-                const chunks = [];
-                doc.on('data', (chunk) => chunks.push(chunk));
-                doc.on('end', () => resolve(Buffer.concat(chunks)));
-                doc.on('error', reject);
-                doc
-                    .fontSize(20)
-                    .fillColor(empresa.primaryColor || '#000000')
-                    .text(empresa.name, { align: 'center' });
-                doc
-                    .fontSize(10)
-                    .fillColor('#000000')
-                    .text(`CNPJ: ${empresa.cnpj}`, { align: 'center' })
-                    .text(`Endereço: ${empresa.address}`, { align: 'center' })
-                    .text(`Telefone: ${empresa.phone}`, { align: 'center' })
-                    .moveDown(2);
-                vales.forEach((vale, index) => {
-                    if (index > 0) {
-                        doc.addPage();
-                    }
-                    doc
-                        .fontSize(16)
-                        .fillColor(empresa.secondaryColor || '#000000')
-                        .text(vale.type === 'VIAGEM'
-                        ? 'VALE DE VIAGEM'
-                        : 'VALE DE DIÁRIA', { align: 'center' })
-                        .moveDown();
-                    doc.fontSize(12).fillColor('#000000');
-                    doc.text(`Cliente: ${vale.client.name}`);
-                    doc.text(`CNPJ Cliente: ${vale.client.cnpj}`);
-                    doc.text(`Local de Trabalho: ${vale.workLocation}`);
-                    doc.text(`Data: ${new Date(vale.date).toLocaleDateString('pt-BR')}`);
-                    doc.moveDown();
-                    if (vale.type === 'VIAGEM') {
-                        doc.text(`Placa do Caminhão: ${vale.truckPlate}`);
-                        doc.text(`Nome do Motorista: ${vale.driverName}`);
-                        doc.text(`Tipo de Viagem: ${vale.tripType}`);
-                    }
-                    else {
-                        doc.text(`Nome do Operador: ${vale.operatorName}`);
-                        doc.text(`Equipamento: ${vale.equipment}`);
-                        doc.text(`Horário Manhã: ${vale.morningStart} - ${vale.morningEnd}`);
-                        doc.text(`Horário Tarde: ${vale.afternoonStart} - ${vale.afternoonEnd}`);
-                        doc.text(`Total de Horas: ${vale.totalHours}h`);
-                    }
-                    doc.moveDown();
-                    doc.text('Assinatura:', { continued: false });
-                    doc.text('_________________________________');
-                });
-                doc.end();
-            }
-            catch (error) {
-                reject(error);
-            }
-        });
     }
 };
 exports.PdfService = PdfService;

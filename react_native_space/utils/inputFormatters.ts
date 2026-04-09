@@ -53,3 +53,47 @@ export const isValidPhone = (value: string): boolean => {
   const ddd = Number(phone.slice(0, 2));
   return ddd >= 11 && ddd <= 99;
 };
+
+export const formatCpf = (value: string): string => {
+  const digits = onlyDigits(value).slice(0, 11);
+
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+};
+
+export const isValidCpf = (value: string): boolean => {
+  const cpf = onlyDigits(value);
+
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1+$/.test(cpf)) return false;
+
+  const calcDigit = (base: string, factor: number): number => {
+    const total = base
+      .split('')
+      .reduce((sum, current) => {
+        const result = sum + Number(current) * factor;
+        factor -= 1;
+        return result;
+      }, 0);
+
+    const remainder = (total * 10) % 11;
+    return remainder === 10 ? 0 : remainder;
+  };
+
+  const firstDigit = calcDigit(cpf.slice(0, 9), 10);
+  const secondDigit = calcDigit(cpf.slice(0, 10), 11);
+
+  return cpf.endsWith(`${firstDigit}${secondDigit}`);
+};
+
+export const formatTruckPlate = (value: string): string => {
+  const plate = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
+
+  if (plate.length <= 3) return plate;
+  return `${plate.slice(0, 3)}-${plate.slice(3)}`;
+};
+
+export const normalizeTruckPlate = (value: string): string =>
+  value.toUpperCase().replace(/[^A-Z0-9]/g, '');

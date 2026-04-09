@@ -2,47 +2,41 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, Modal, FlatList, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, typography, borderRadius } from '../app/constants/theme';
-import { Client } from '../types';
+import { Prestador } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 
-interface ClientPickerProps {
-  clients?: Client[];
-  selectedClientId?: string;
-  onSelectClient?: (clientId: string) => void;
-  value?: Client | null;
-  onChange?: (client: Client | null) => void;
+interface PrestadorPickerProps {
+  prestadores?: Prestador[];
+  value?: Prestador | null;
+  onChange?: (prestador: Prestador | null) => void;
   label?: string;
   error?: string;
 }
 
-export function ClientPicker({
-  clients,
-  selectedClientId,
-  onSelectClient,
+export function PrestadorPicker({
+  prestadores,
   value,
   onChange,
   label,
   error,
-}: ClientPickerProps) {
+}: PrestadorPickerProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const selectedId = value?.id ?? selectedClientId;
-  const selectedClient = clients?.find((c) => c?.id === selectedId) ?? value ?? null;
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label ? <Text style={styles.label}>{label}</Text> : null}
       <Pressable
-        style={[styles.picker, error && styles.pickerError]}
+        style={[styles.picker, error ? styles.pickerError : null]}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={[styles.pickerText, !selectedClient && styles.placeholderText]}>
-          {selectedClient?.name || 'Selecione um cliente'}
+        <Text style={[styles.pickerText, !value ? styles.placeholderText : null]}>
+          {value?.name ?? 'Selecione um prestador'}
         </Text>
         <Ionicons name="chevron-down" size={20} color={theme.textSecondary} />
       </Pressable>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <Modal
         visible={modalVisible}
@@ -52,21 +46,22 @@ export function ClientPicker({
       >
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Selecionar Cliente</Text>
+            <Text style={styles.modalTitle}>Selecionar Prestador</Text>
             <FlatList
-              data={clients}
-              keyExtractor={(item) => item?.id || ''}
-              ListEmptyComponent={<Text style={styles.emptyText}>Nenhum cliente disponivel</Text>}
+              data={prestadores}
+              keyExtractor={(item) => item.id}
+              ListEmptyComponent={<Text style={styles.emptyText}>Nenhum prestador disponivel</Text>}
               renderItem={({ item }) => (
                 <Pressable
-                  style={styles.clientItem}
+                  style={styles.item}
                   onPress={() => {
                     onChange?.(item);
-                    onSelectClient?.(item?.id || '');
                     setModalVisible(false);
                   }}
                 >
-                  <Text style={styles.clientName}>{item?.name || ''}</Text>
+                  <Text style={styles.itemName}>{item.name}</Text>
+                  <Text style={styles.itemSub}>CPF: {item.cpf}</Text>
+                  <Text style={styles.itemSub}>Placa: {item.vehiclePlate}</Text>
                 </Pressable>
               )}
             />
@@ -79,9 +74,7 @@ export function ClientPicker({
 
 const createStyles = (theme: any) =>
   StyleSheet.create({
-    container: {
-      marginBottom: spacing.md,
-    },
+    container: { marginBottom: spacing.md },
     label: {
       ...typography.body,
       color: theme.text,
@@ -99,16 +92,9 @@ const createStyles = (theme: any) =>
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    pickerError: {
-      borderColor: theme.error,
-    },
-    pickerText: {
-      ...typography.body,
-      color: theme.text,
-    },
-    placeholderText: {
-      color: theme.textSecondary,
-    },
+    pickerError: { borderColor: theme.error },
+    pickerText: { ...typography.body, color: theme.text },
+    placeholderText: { color: theme.textSecondary },
     errorText: {
       ...typography.caption,
       color: theme.error,
@@ -132,16 +118,14 @@ const createStyles = (theme: any) =>
       paddingHorizontal: spacing.lg,
       marginBottom: spacing.md,
     },
-    clientItem: {
+    item: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
-    clientName: {
-      ...typography.body,
-      color: theme.text,
-    },
+    itemName: { ...typography.body, color: theme.text, fontWeight: '600' },
+    itemSub: { ...typography.caption, color: theme.textSecondary },
     emptyText: {
       ...typography.body,
       color: theme.textSecondary,

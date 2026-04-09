@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Linking } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -8,8 +8,9 @@ import { ThemedTextInput } from '../../components/ThemedTextInput';
 import { GradientButton } from '../../components/GradientButton';
 import { SignaturePad } from '../../components/SignaturePad';
 import { ClientPicker } from '../../components/ClientPicker';
+import { PrestadorPicker } from '../../components/PrestadorPicker';
 import { api } from '../../services/api';
-import { Client } from '../../types';
+import { Client, Prestador } from '../../types';
 import { spacing, typography, borderRadius } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
@@ -19,6 +20,7 @@ export default function CriarDiariaScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
   const [client, setClient] = useState<Client | null>(null);
   const [operatorName, setOperatorName] = useState('');
   const [workLocation, setWorkLocation] = useState('');
@@ -34,6 +36,38 @@ export default function CriarDiariaScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [totalHours, setTotalHours] = useState(0);
   const [showTimePicker, setShowTimePicker] = useState<{ field: string; value: Date } | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [prestadores, setPrestadores] = useState<Prestador[]>([]);
+  const [prestador, setPrestador] = useState<Prestador | null>(null);
+
+  const loadClients = React.useCallback(async () => {
+    try {
+      const response = await api.getClients();
+      setClients(response.items ?? []);
+    } catch (error: unknown) {
+      showToast.error(getErrorMessage(error));
+    }
+  }, []);
+
+  const loadPrestadores = React.useCallback(async () => {
+    try {
+      const response = await api.getPrestadores();
+      setPrestadores(response.items ?? []);
+    } catch (error: unknown) {
+      showToast.error(getErrorMessage(error));
+    }
+  }, []);
+
+  useEffect(() => {
+    loadClients();
+    loadPrestadores();
+  }, [loadClients, loadPrestadores]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPrestadores();
+    }, [loadPrestadores])
+  );
 
   useEffect(() => {
     calculateTotalHours();
@@ -50,22 +84,25 @@ export default function CriarDiariaScreen() {
       const afternoonHours = parseTime(afternoonEnd) - parseTime(afternoonStart);
       const total = Math.max(0, morningHours) + Math.max(0, afternoonHours);
       setTotalHours(Number(total.toFixed(1)));
-    } catch (error) {
+    } catch (_error) {
       setTotalHours(0);
     }
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!client) newErrors.client = 'Cliente é obrigatório';
-    if (!operatorName) newErrors.operatorName = 'Nome do operador é obrigatório';
-    if (!workLocation) newErrors.workLocation = 'Local da obra é obrigatório';
-    if (!equipment) newErrors.equipment = 'Equipamento é obrigatório';
-    if (!signatureData) newErrors.signature = 'Assinatura é obrigatória';
-    if (totalHours <= 0) newErrors.hours = 'Horário inválido';
+
+    if (!client) newErrors.client = 'Cliente obrigatorio';
+    if (!operatorName) newErrors.operatorName = 'Prestador/operador obrigatorio';
+    if (!workLocation) newErrors.workLocation = 'Local da obra obrigatorio';
+    if (!equipment) newErrors.equipment = 'Equipamento obrigatorio';
+    if (totalHours <= 0) newErrors.hours = 'Horario invalido';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const formatDate = (value: Date) => value.toLocaleDateString('pt-BR');
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -76,15 +113,38 @@ export default function CriarDiariaScreen() {
         clientId: client!.id,
         operatorName,
         workLocation,
-        date: date.toISOString(),
+        ...(date ? { date: date.toISOString() } : {}),
         morningStart,
         morningEnd,
         afternoonStart,
         afternoonEnd,
         totalHours,
         equipment,
-        signatureData,
+        ...(signatureData ? { signatureData } : {}),
       });
+
+      if (prestador?.phone) {
+        try {
+          const phone = `55${prestador.phone.replace(/\D/g, '')}`;
+          const message = [
+            'Novo vale diaria criado para voce.',
+            `Cliente: ${client?.name ?? '-'}`,
+            `Operador: ${operatorName}`,
+            `Local: ${workLocation}`,
+            `Data: ${formatDate(date)}`,
+            `Manha: ${morningStart} - ${morningEnd}`,
+            `Tarde: ${afternoonStart} - ${afternoonEnd}`,
+            `Total: ${totalHours}h`,
+            `Equipamento: ${equipment}`,
+          ].join('\n');
+
+          const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+          await Linking.openURL(whatsappUrl);
+        } catch (_whatsError: unknown) {
+          showToast.error('Vale criado, mas nao foi possivel abrir o WhatsApp');
+        }
+      }
+
       showToast.success(successMessages.createVoucher);
       router.back();
     } catch (error: unknown) {
@@ -94,31 +154,38 @@ export default function CriarDiariaScreen() {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR');
-  };
-
-  const handleTimeChange = (field: string, selectedTime: Date | undefined) => {
+  const handleTimeChange = (field: string, selectedTime?: Date) => {
     setShowTimePicker(null);
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, '0');
-      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
-      const timeString = `${hours}:${minutes}`;
-      
-      switch (field) {
-        case 'morningStart': setMorningStart(timeString); break;
-        case 'morningEnd': setMorningEnd(timeString); break;
-        case 'afternoonStart': setAfternoonStart(timeString); break;
-        case 'afternoonEnd': setAfternoonEnd(timeString); break;
-      }
+
+    if (!selectedTime) return;
+
+    const hours = selectedTime.getHours().toString().padStart(2, '0');
+    const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+    const timeString = `${hours}:${minutes}`;
+
+    switch (field) {
+      case 'morningStart':
+        setMorningStart(timeString);
+        break;
+      case 'morningEnd':
+        setMorningEnd(timeString);
+        break;
+      case 'afternoonStart':
+        setAfternoonStart(timeString);
+        break;
+      case 'afternoonEnd':
+        setAfternoonEnd(timeString);
+        break;
+      default:
+        break;
     }
   };
 
   const showTimePickerFor = (field: string, currentValue: string) => {
     const [hours, minutes] = currentValue.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes);
-    setShowTimePicker({ field, value: date });
+    const pickerDate = new Date();
+    pickerDate.setHours(hours, minutes, 0, 0);
+    setShowTimePicker({ field, value: pickerDate });
   };
 
   return (
@@ -128,19 +195,27 @@ export default function CriarDiariaScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>Novo Vale Diária</Text>
+          <Text style={styles.title}>Novo Vale Diaria</Text>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ClientPicker value={client} onChange={(c) => setClient(c)} error={errors.client} />
+          <ClientPicker clients={clients} value={client} onChange={(c) => setClient(c)} error={errors.client} />
 
-          <ThemedTextInput
-            label="Nome do Operador"
-            value={operatorName}
-            onChangeText={setOperatorName}
-            icon="person-outline"
+          <PrestadorPicker
+            prestadores={prestadores}
+            value={prestador}
+            onChange={(selected) => {
+              setPrestador(selected);
+              setOperatorName(selected?.name ?? '');
+            }}
+            label="Prestador (operador)"
             error={errors.operatorName}
           />
+
+          <TouchableOpacity onPress={() => router.push('/prestadores/cadastrar')} style={styles.newPrestadorButton}>
+            <Ionicons name="person-add-outline" size={18} color={theme.primary} />
+            <Text style={styles.newPrestadorText}>Cadastrar prestador</Text>
+          </TouchableOpacity>
 
           <ThemedTextInput
             label="Local da Obra"
@@ -151,7 +226,7 @@ export default function CriarDiariaScreen() {
           />
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Data</Text>
+            <Text style={styles.sectionLabel}>Data (opcional)</Text>
             <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
               <Ionicons name="calendar-outline" size={20} color={theme.textSecondary} />
               <Text style={styles.dateText}>{formatDate(date)}</Text>
@@ -163,7 +238,7 @@ export default function CriarDiariaScreen() {
               value={date}
               mode="date"
               display="default"
-              onChange={(event, selectedDate) => {
+              onChange={(_event, selectedDate) => {
                 setShowDatePicker(Platform.OS === 'ios');
                 if (selectedDate) setDate(selectedDate);
               }}
@@ -171,21 +246,16 @@ export default function CriarDiariaScreen() {
           )}
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Horários</Text>
+            <Text style={styles.sectionLabel}>Horarios</Text>
+
             <View style={styles.timeSection}>
-              <Text style={styles.timeSectionLabel}>Manhã</Text>
+              <Text style={styles.timeSectionLabel}>Manha</Text>
               <View style={styles.timeRow}>
-                <TouchableOpacity
-                  style={styles.timeButton}
-                  onPress={() => showTimePickerFor('morningStart', morningStart)}
-                >
-                  <Text style={styles.timeButtonLabel}>Início</Text>
+                <TouchableOpacity style={styles.timeButton} onPress={() => showTimePickerFor('morningStart', morningStart)}>
+                  <Text style={styles.timeButtonLabel}>Inicio</Text>
                   <Text style={styles.timeButtonValue}>{morningStart}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.timeButton}
-                  onPress={() => showTimePickerFor('morningEnd', morningEnd)}
-                >
+                <TouchableOpacity style={styles.timeButton} onPress={() => showTimePickerFor('morningEnd', morningEnd)}>
                   <Text style={styles.timeButtonLabel}>Fim</Text>
                   <Text style={styles.timeButtonValue}>{morningEnd}</Text>
                 </TouchableOpacity>
@@ -195,17 +265,11 @@ export default function CriarDiariaScreen() {
             <View style={styles.timeSection}>
               <Text style={styles.timeSectionLabel}>Tarde</Text>
               <View style={styles.timeRow}>
-                <TouchableOpacity
-                  style={styles.timeButton}
-                  onPress={() => showTimePickerFor('afternoonStart', afternoonStart)}
-                >
-                  <Text style={styles.timeButtonLabel}>Início</Text>
+                <TouchableOpacity style={styles.timeButton} onPress={() => showTimePickerFor('afternoonStart', afternoonStart)}>
+                  <Text style={styles.timeButtonLabel}>Inicio</Text>
                   <Text style={styles.timeButtonValue}>{afternoonStart}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.timeButton}
-                  onPress={() => showTimePickerFor('afternoonEnd', afternoonEnd)}
-                >
+                <TouchableOpacity style={styles.timeButton} onPress={() => showTimePickerFor('afternoonEnd', afternoonEnd)}>
                   <Text style={styles.timeButtonLabel}>Fim</Text>
                   <Text style={styles.timeButtonValue}>{afternoonEnd}</Text>
                 </TouchableOpacity>
@@ -224,7 +288,7 @@ export default function CriarDiariaScreen() {
               mode="time"
               is24Hour
               display="default"
-              onChange={(event, time) => handleTimeChange(showTimePicker.field, time)}
+              onChange={(_event, time) => handleTimeChange(showTimePicker.field, time)}
             />
           )}
 
@@ -237,7 +301,6 @@ export default function CriarDiariaScreen() {
           />
 
           <SignaturePad onSave={setSignatureData} />
-          {errors.signature && <Text style={styles.errorText}>{errors.signature}</Text>}
 
           <GradientButton title="Salvar Vale" onPress={handleSubmit} loading={loading} style={styles.submitButton} />
         </ScrollView>
@@ -325,6 +388,25 @@ const createStyles = (theme: any) =>
       fontSize: 12,
       color: theme.error,
       marginTop: spacing.xs,
+    },
+    newPrestadorButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      marginTop: -spacing.xs,
+      marginBottom: spacing.md,
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.md,
+      backgroundColor: 'rgba(249, 115, 22, 0.12)',
+      borderWidth: 1,
+      borderColor: theme.outline,
+    },
+    newPrestadorText: {
+      ...typography.caption,
+      color: theme.primary,
+      fontWeight: '600',
     },
     submitButton: { marginTop: spacing.lg },
   });

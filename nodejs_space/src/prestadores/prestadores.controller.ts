@@ -69,7 +69,9 @@ export class PrestadoresController {
   @ApiOperation({ summary: 'Get prestador by ID' })
   @ApiResponse({ status: 200, description: 'Prestador retrieved' })
   @ApiResponse({ status: 404, description: 'Prestador not found' })
-  async findOne(@Param('id') id: string): Promise<PrestadorResponse> {
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<PrestadorResponse> {
     return this.prestadoresService.findOne(id);
   }
 
@@ -86,7 +88,9 @@ export class PrestadoresController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete prestador' })
   @ApiResponse({ status: 200, description: 'Prestador deleted' })
-  async delete(@Param('id') id: string): Promise<SuccessResponse> {
+  async delete(
+    @Param('id') id: string,
+  ): Promise<SuccessResponse> {
     return this.prestadoresService.delete(id);
   }
 }

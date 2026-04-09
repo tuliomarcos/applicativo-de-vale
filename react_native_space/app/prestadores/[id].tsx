@@ -1,14 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedTextInput } from '../../components/ThemedTextInput';
 import { GradientButton } from '../../components/GradientButton';
 import { api } from '../../services/api';
+import { Prestador } from '../../types';
 import { spacing, typography, borderRadius } from '../constants/theme';
-import { showToast, getErrorMessage, successMessages } from '../../utils/toast';
+import { showToast, getErrorMessage } from '../../utils/toast';
 import { useTheme } from '../../contexts/ThemeContext';
 import {
   formatCpf,
@@ -20,8 +21,10 @@ import {
   onlyDigits,
 } from '../../utils/inputFormatters';
 
-export default function CadastrarPrestadorScreen() {
+export default function EditarPrestadorScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const id = params.id as string;
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -30,7 +33,27 @@ export default function CadastrarPrestadorScreen() {
   const [phone, setPhone] = useState('');
   const [vehiclePlate, setVehiclePlate] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const loadPrestador = async () => {
+      try {
+        const prestador: Prestador = await api.getPrestador(id);
+        setName(prestador.name ?? '');
+        setCpf(formatCpf(prestador.cpf ?? ''));
+        setPhone(formatPhone(prestador.phone ?? ''));
+        setVehiclePlate(formatTruckPlate(prestador.vehiclePlate ?? ''));
+      } catch (error: unknown) {
+        showToast.error(getErrorMessage(error));
+        router.back();
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadPrestador();
+  }, [id]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -60,14 +83,14 @@ export default function CadastrarPrestadorScreen() {
 
     setLoading(true);
     try {
-      await api.createPrestador({
+      await api.updatePrestador(id, {
         name: name.trim(),
-        ...(cpf.trim() ? { cpf: onlyDigits(cpf) } : {}),
+        ...(cpf.trim() ? { cpf: onlyDigits(cpf) } : { cpf: '' }),
         phone: onlyDigits(phone),
         vehiclePlate: normalizeTruckPlate(vehiclePlate),
       });
 
-      showToast.success(successMessages.createServiceProvider);
+      showToast.success('Prestador atualizado com sucesso!');
       router.back();
     } catch (error: unknown) {
       showToast.error(getErrorMessage(error));
@@ -75,6 +98,18 @@ export default function CadastrarPrestadorScreen() {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.centered}>
+            <Text style={styles.loadingText}>Carregando...</Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient colors={[theme.backgroundGradientStart, theme.backgroundGradientEnd]} style={styles.gradient}>
@@ -84,7 +119,7 @@ export default function CadastrarPrestadorScreen() {
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color={theme.text} />
             </TouchableOpacity>
-            <Text style={styles.title}>Cadastrar Prestador</Text>
+            <Text style={styles.title}>Editar Prestador</Text>
           </View>
 
           <View style={styles.form}>
@@ -123,7 +158,7 @@ export default function CadastrarPrestadorScreen() {
               error={errors.vehiclePlate}
             />
 
-            <GradientButton title="Salvar" onPress={handleSubmit} loading={loading} style={styles.submitButton} />
+            <GradientButton title="Salvar Alteracoes" onPress={handleSubmit} loading={loading} style={styles.submitButton} />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -139,6 +174,16 @@ const createStyles = (theme: any) =>
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.lg,
       paddingBottom: spacing.xl,
+    },
+    centered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: spacing.xl,
+    },
+    loadingText: {
+      ...typography.body,
+      color: theme.textSecondary,
     },
     header: {
       flexDirection: 'row',

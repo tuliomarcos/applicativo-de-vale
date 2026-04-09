@@ -42,7 +42,8 @@ export type PrestadorResponse = {
   id: string;
   createdById: string;
   name: string;
-  document: string;
+  cpf: string;
+  vehiclePlate: string;
   documentType: DocumentTypeValue;
   address: string;
   phone: string;

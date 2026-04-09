@@ -40,14 +40,14 @@ export class CreateValeViagemDto {
   workLocation: string;
 
   @ApiProperty({ example: '2026-03-11T10:00:00.000Z' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  date: string;
+  date?: string;
 
-  @ApiProperty({ example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...' })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...', required: false })
+  @IsOptional()
   @IsString()
-  signatureData: string;
+  signatureData?: string;
 }
 
 export class CreateValeDiariaDto {
@@ -67,9 +67,9 @@ export class CreateValeDiariaDto {
   workLocation: string;
 
   @ApiProperty({ example: '2026-03-11T10:00:00.000Z' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  date: string;
+  date?: string;
 
   @ApiProperty({ example: '08:00' })
   @IsNotEmpty()
@@ -101,10 +101,10 @@ export class CreateValeDiariaDto {
   @IsString()
   equipment: string;
 
-  @ApiProperty({ example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...' })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...', required: false })
+  @IsOptional()
   @IsString()
-  signatureData: string;
+  signatureData?: string;
 }
 
 export class UpdateValeDto {

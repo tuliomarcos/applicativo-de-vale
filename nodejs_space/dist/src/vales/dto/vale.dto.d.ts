@@ -8,21 +8,21 @@ export declare class CreateValeViagemDto {
     driverName: string;
     tripType: TripType;
     workLocation: string;
-    date: string;
-    signatureData: string;
+    date?: string;
+    signatureData?: string;
 }
 export declare class CreateValeDiariaDto {
     clientId: string;
     operatorName: string;
     workLocation: string;
-    date: string;
+    date?: string;
     morningStart: string;
     morningEnd: string;
     afternoonStart: string;
     afternoonEnd: string;
     totalHours: number;
     equipment: string;
-    signatureData: string;
+    signatureData?: string;
 }
 export declare class UpdateValeDto {
     workLocation?: string;

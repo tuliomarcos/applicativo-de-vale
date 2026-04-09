@@ -41,6 +41,21 @@ export class AuthService {
         },
       });
 
+      if (signupDto.role === 'PRESTADOR') {
+        await this.prisma.prestador.create({
+          data: {
+            createdById: user.id,
+            name: user.name,
+            document: '',
+            vehiclePlate: '',
+            documentType: 'CPF',
+            address: '',
+            phone: user.phone,
+            email: user.email,
+          },
+        });
+      }
+
       const token = this.jwtService.sign({
         sub: user.id,
         email: user.email,

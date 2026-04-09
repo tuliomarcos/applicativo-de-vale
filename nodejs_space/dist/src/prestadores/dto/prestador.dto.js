@@ -12,44 +12,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdatePrestadorDto = exports.CreatePrestadorDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
-var DocumentType;
-(function (DocumentType) {
-    DocumentType["CPF"] = "CPF";
-    DocumentType["CNPJ"] = "CNPJ";
-})(DocumentType || (DocumentType = {}));
 class CreatePrestadorDto {
     name;
-    document;
-    documentType;
-    address;
+    cpf;
+    vehiclePlate;
     phone;
     email;
+    address;
 }
 exports.CreatePrestadorDto = CreatePrestadorDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Service Provider Inc' }),
+    (0, swagger_1.ApiProperty)({ example: 'Jose da Silva' }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePrestadorDto.prototype, "name", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '123.456.789-00' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePrestadorDto.prototype, "cpf", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'ABC-1234' }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreatePrestadorDto.prototype, "document", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: DocumentType, example: 'CPF' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEnum)(DocumentType),
-    __metadata("design:type", String)
-], CreatePrestadorDto.prototype, "documentType", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Rua Example, 456' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreatePrestadorDto.prototype, "address", void 0);
+], CreatePrestadorDto.prototype, "vehiclePlate", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '+5511977776666' }),
     (0, class_validator_1.IsNotEmpty)(),
@@ -57,15 +46,21 @@ __decorate([
     __metadata("design:type", String)
 ], CreatePrestadorDto.prototype, "phone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'prestador@example.com' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, swagger_1.ApiProperty)({ example: 'prestador@example.com', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePrestadorDto.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'Rua Example, 456', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePrestadorDto.prototype, "address", void 0);
 class UpdatePrestadorDto {
     name;
-    document;
-    documentType;
+    cpf;
+    vehiclePlate;
     address;
     phone;
     email;
@@ -82,13 +77,13 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdatePrestadorDto.prototype, "document", void 0);
+], UpdatePrestadorDto.prototype, "cpf", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ enum: DocumentType, required: false }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(DocumentType),
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdatePrestadorDto.prototype, "documentType", void 0);
+], UpdatePrestadorDto.prototype, "vehiclePlate", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
     (0, class_validator_1.IsOptional)(),
@@ -104,7 +99,7 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdatePrestadorDto.prototype, "email", void 0);
 //# sourceMappingURL=prestador.dto.js.map

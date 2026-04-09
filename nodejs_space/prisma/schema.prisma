@@ -88,6 +88,7 @@ model prestador {
   createdById  String
   name         String
   document     String
+  vehiclePlate String       @default("")
   documentType DocumentType
   address      String
   phone        String
